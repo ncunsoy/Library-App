@@ -10,7 +10,7 @@ readingList=pd.read_csv("D:/Datalarım/Desktop/bil481/Library App/database/data_
 notification=pd.read_csv("D:/Datalarım/Desktop/bil481/Library App/database/data_prepreation/Tables/notification.csv")
 
 
-engine =create_engine('sqlite:///mydatabase.db')
+engine =create_engine('sqlite:///LibraryApp.db')
 
 user.to_sql('User',con=engine,if_exists='replace')
 staff.to_sql('Staff',con=engine,if_exists='replace')
