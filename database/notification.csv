@@ -1,0 +1,6 @@
+,NotificationID,UserID,Message,NotificationDate
+0,1,10000,Yeni yorumunuz var!,2023-05-17
+1,2,10001,"Kitabınız hazır, teslim alabilirsiniz.",2023-06-12
+2,3,10002,Yeni kitap önerileri var!,2023-04-29
+3,4,10003,Yorumunuz onaylandı.,2023-07-05
+4,5,10004,Yeni kitaplar eklendi.,2023-08-03
