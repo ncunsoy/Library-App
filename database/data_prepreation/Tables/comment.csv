@@ -1,4 +1,4 @@
-,CommentID,UserID,BookISSBN,CommentText,CommentDate
+,CommentID,UserID,BookISBN,CommentText,CommentDate
 0,1,Uta Stevens,10061,Harika bir kitap.,2020-05-17
 1,2,Quinlan Key,23847,Ufuk açıcı bir kitap.,2019-08-17
 2,3,Thomas Finch,11118,Tavsiye ederim.,2021-05-09
