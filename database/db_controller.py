@@ -2,10 +2,11 @@ import sqlite3
 from datetime import datetime
 
 class DatabaseController:
-    def __init__(self):
+    def __init__(self, db_name='LibraryApp.db'):
         try:
             self._conn = sqlite3.connect('LibraryApp.db')
             self._cursor = self._conn.cursor()
+            self._db_name = db_name
         except sqlite3.Error as e:
             print(f"Veritabanı bağlantı hatası: {e}")
 
