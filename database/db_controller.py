@@ -172,18 +172,22 @@ class DatabaseController:
     # Kullanıcı tüm rezervasyonlarını görecek. past_reservations için status = "Finished" olacak. Overdue olanlar için ise DueDate'i geçmiş olanlar olacak
     def view_reservations(self, user_id):
         try:
+            print(f"Executing view_reservations for user_id: {user_id}")
             query = """
             SELECT b.Title, r.ReservationDate, r.DueDate, r.Status
-            FROM Reservation r, Book b, Users u
+            FROM Reservation r
+            JOIN Book b ON r.BookISBN = b.ISBN
+            JOIN Users u ON r.UserID = u.UserID
             WHERE r.UserID = ?
-            AND r.BookISBN = b.ISBN
-            AND r.UserID = u.UserID
             """
             self._cursor.execute(query, (user_id,))
-            return self._cursor.fetchall()
+            results = self._cursor.fetchall()
+            print(f"Query executed successfully. Found {len(results)} reservations.")
+            return results
         except sqlite3.Error as e:
             print(f"Geçmiş rezervasyonları görüntüleme hatası: {e}")
             return []
+
         
         
     
@@ -258,10 +262,54 @@ class DatabaseController:
             print(f"Kitap ekleme hatası: {e}")
             self._conn.rollback()
             return False
+
+    
+    def remove_book(self, isbn):
+        try:
+            query = """
+            DELETE FROM Book
+            WHERE ISBN = ?
+            """
+            self._cursor.execute(query, (isbn,))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Kitap silme hatası: {e}")
+            self._conn.rollback()
+            return False
+
+
+    def register_user(self, name, password, favourite_genre):
+        try:
+            query = """
+            INSERT INTO Users (Name,Password,FavouriteGenre,Fine)
+            VALUES (?, ?, ?, 0)
+            """
+            self._cursor.execute(query, (name, password, favourite_genre))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Kullanıcı kaydetme hatası: {e}")
+            self._conn.rollback()
+            return False
+        
+    def delete_user(self, user_id):
+        try:
+            query = """
+            DELETE FROM Users
+            WHERE UserID = ?
+            """
+            self._cursor.execute(query, (user_id,))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Kullanıcı silme hatası: {e}")
+            self._conn.rollback()
+            return False
     
     
-    # add_notification method for staff member class
-    def add_notification(self, user_id, message):
+    # send_notification method for staff member class
+    def send_notification(self, user_id, message):
         try:
             query = """
             INSERT INTO Notification (UserID,Message,NotificationDate
@@ -275,6 +323,24 @@ class DatabaseController:
             print(f"Bildirim ekleme hatası: {e}")
             self._conn.rollback()
             return False
+        
+
+    # get_user_to_send_notification method for staff member class
+    # Kitap teslim edildiğinde bildirim gönderilecek kullanıcıları getirir
+    def get_user_to_send_notification(self,book_isbn):
+        try:
+            query = """
+            SELECT u.UserID
+            FROM Users u, Reservation r
+            WHERE r.BookISBN = ?
+            AND r.UserID = u.UserID
+            """
+            self._cursor.execute(query, (book_isbn,))
+            return self._cursor.fetchall()
+        except sqlite3.Error as e:
+            print(f"Bildirim gönderilecek kullanıcıları getirme hatası: {e}")
+            return []
+        
 
 
     # addUser method for staff member class
@@ -325,6 +391,21 @@ class DatabaseController:
             self._conn.rollback()
             return False
         
+    def update_book_description(self, isbn, description):
+        try:
+            query = """
+            UPDATE Book
+            SET Description = ?
+            WHERE ISBN = ?
+            """
+            self._cursor.execute(query, (description, isbn))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Kitap açıklaması güncelleme hatası: {e}")
+            self._conn.rollback()
+            return False
+        
     # createBookReport method for staff member class
     def createBookReport(self, isbn):
         try:
@@ -344,8 +425,6 @@ class DatabaseController:
         except sqlite3.Error as e:
             print(f"Rapor oluşturma hatası: {e}")
             return []
-
-        
  
     # createUserReport method for staff member class
     def createUserReport(self,user_id):
@@ -363,6 +442,9 @@ class DatabaseController:
         except sqlite3.Error as e:
             print(f"Rapor oluşturma hatası: {e}")
             return []
+
+
+    
         
 
 class main:
@@ -372,7 +454,7 @@ class main:
         print(db.get_recommendations('Fiction'))
         # print(db.add_book('9781408855652', 'Harry Potter and the Philosopher\'s Stone', 'J.K. Rowling', 'The book that started it all.', 'Fantasy', 5))
         # print(db.add_comment(10050, '9781408855652', 'This is a great book!'))
-        # print(db.add_notification(10050, 'You have a new notification!'))
+        # print(db.send_notification(10050, 'You have a new notification!'))
         # print(db.add_to_reading_list(10050, '9781408855652'))
         # print(db.add_reservation(10050, '9781408855652', '2021-12-31','2021-12-31',"Active"))
         # print(db.add_user('John Doe', 'password', 'Fantasy'))
@@ -468,6 +550,15 @@ class main:
         print("\nKitap raporu testi...")
         book_report = db.createBookReport(isbn="97831614841")
         print("Kitap raporu:", book_report)
+
+        # Test 11: View Reservations
+        print("\nTest 6: View Reservations")
+        reservations = db.view_reservations(user_id=10004)
+        if reservations:
+            print("View Reservations: Passed")
+            print("Reservations:", reservations)
+        else:
+            print("View Reservations: Failed")
 
 
 
