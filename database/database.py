@@ -22,7 +22,7 @@ tables = ["Users", "Staff", "Book", "Reservation", "Comment", "ReadingList", "No
 # Create table statements
 create_tables_sql = [
     """
-    CREATE TABLE Users (
+    CREATE TABLE User (
         UserID INTEGER PRIMARY KEY AUTOINCREMENT,
         Name TEXT NOT NULL,
         FavouriteGenre TEXT,
