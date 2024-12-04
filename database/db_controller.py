@@ -157,3 +157,53 @@ class DatabaseController:
             print(f"Ceza güncelleme hatası: {e}")
             self._conn.rollback()
             return False
+        
+    
+    def update_book_availability(self, isbn, availability):
+        try:
+            query = """
+            UPDATE Book 
+            SET availability = ? 
+            WHERE isbn = ?
+            """
+            self._cursor.execute(query, (availability, isbn))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Kitap durumu güncelleme hatası: {e}")
+            self._conn.rollback()
+            return False
+        
+
+    def createBookReport(self,isbn):
+        try:
+            query = """
+            SELECT b.Title, b.Authors, b.Description, b.Genre, COUNT(r.ReservationID) COUNT(c.CommentID) as CommentCount 
+            FROM Book as b,Reservation as r,Comment as c
+            WHERE isbn = ? and
+            r.BookISBN = b.ISBN and
+            c.BookISBN = b.ISBN
+            """
+            self._cursor.execute(query, (isbn,))
+            return self._cursor.fetchall()
+        
+        except sqlite3.Error as e:
+            print(f"Rapor oluşturma hatası: {e}")
+            return []
+        
+    
+    def createUserReport(self,user_id):
+        try:
+            query = """
+            SELECT u.Name, u.FavouriteGenre, COUNT(r.ReservationID) as ReservationCount, COUNT(c.CommentID) as CommentCount
+            FROM Users as u,Reservation as r,Comment as c
+            WHERE u.UserID = ? and
+            r.UserID = u.UserID and
+            c.UserID = u.UserID
+            """
+            self._cursor.execute(query, (user_id))
+            return self._cursor.fetchall()
+        
+        except sqlite3.Error as e:
+            print(f"Rapor oluşturma hatası: {e}")
+            return []
