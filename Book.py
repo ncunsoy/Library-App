@@ -63,5 +63,5 @@ class Book:
         return self._currentBorrowerID
     
     def setCurrentBorrower(self,user_id):
-        #after add db controller,update this method
-        self.controller.update_currentBorrower(self._ısbn,user_id)
+        ###
+        self._currentBorrowerID=user_id
