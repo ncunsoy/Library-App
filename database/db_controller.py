@@ -191,7 +191,7 @@ class DatabaseController:
             WHERE b.ISBN = ?
             """
             self._cursor.execute(query, (isbn,))
-            return self._cursor.fetchone()
+            return self._cursor.fetchall()
         except sqlite3.Error as e:
             print(f"Rapor oluşturma hatası: {e}")
             return []
