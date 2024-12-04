@@ -1,7 +1,10 @@
 from sqlalchemy import create_engine, text, inspect
 import pandas as pd
 
-# File paths
+# Database engine
+db_path = 'sqlite:///LibraryApp.db'
+engine = create_engine(db_path)
+
 file_paths = {
     "Users": "D:/Datalarım/Desktop/bil481/Library App/database/data_prepreation/Tables/users.csv",
     "Staff": "D:/Datalarım/Desktop/bil481/Library App/database/data_prepreation/Tables/staffs.csv",
@@ -12,18 +15,12 @@ file_paths = {
     "Notification": "D:/Datalarım/Desktop/bil481/Library App/database/data_prepreation/Tables/notification.csv"
 }
 
-# Database engine
-db_path = 'sqlite:///LibraryApp.db'
-engine = create_engine(db_path)
+tables = ["Users", "Staff", "Book", "Comment", "Reservation", "ReadingList", "Notification"]
 
-# Tables in order of creation (to handle foreign key dependencies)
-tables = ["Users", "Staff", "Book", "Reservation", "Comment", "ReadingList", "Notification"]
-
-# Create table statements
 create_tables_sql = [
     """
-    CREATE TABLE User (
-        UserID INTEGER PRIMARY KEY AUTOINCREMENT,
+    CREATE TABLE Users (
+        UserID INTEGER PRIMARY KEY,
         Name TEXT NOT NULL,
         FavouriteGenre TEXT,
         Password TEXT NOT NULL,
@@ -32,9 +29,9 @@ create_tables_sql = [
     """,
     """
     CREATE TABLE Staff (
-        StaffID INTEGER PRIMARY KEY AUTOINCREMENT,
+        StaffID INTEGER PRIMARY KEY,
         Name TEXT NOT NULL,
-        Password TEXT NOT NULL,
+        Password TEXT NOT NULL
     )
     """,
     """
@@ -44,24 +41,12 @@ create_tables_sql = [
         Authors TEXT NOT NULL,
         Description TEXT,
         Genre TEXT NOT NULL,
-        Availability INTEGER NOT NULL
-    )
-    """,
-    """
-    CREATE TABLE Reservation (
-        ReservationID INTEGER PRIMARY KEY AUTOINCREMENT,
-        UserID INTEGER NOT NULL,
-        BookISBN TEXT NOT NULL,
-        ReservationDate TEXT NOT NULL,
-        DueDate TEXT NOT NULL,
-        Status TEXT DEFAULT 'active',
-        FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
-        FOREIGN KEY (BookISBN) REFERENCES Book(ISBN) ON DELETE CASCADE
+        Availability BOOLEAN NOT NULL
     )
     """,
     """
     CREATE TABLE Comment (
-        CommentID INTEGER PRIMARY KEY AUTOINCREMENT,
+        CommentID INTEGER PRIMARY KEY,
         UserID INTEGER NOT NULL,
         BookISBN TEXT NOT NULL,
         CommentText TEXT NOT NULL,
@@ -71,8 +56,20 @@ create_tables_sql = [
     )
     """,
     """
+    CREATE TABLE Reservation (
+        ReservationID INTEGER PRIMARY KEY,
+        UserID INTEGER NOT NULL,
+        BookISBN TEXT NOT NULL,
+        ReservationDate TEXT NOT NULL,
+        DueDate TEXT NOT NULL,
+        Status TEXT DEFAULT 'Active',
+        FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
+        FOREIGN KEY (BookISBN) REFERENCES Book(ISBN) ON DELETE CASCADE
+    )
+    """,
+    """
     CREATE TABLE ReadingList (
-        ReadingListID INTEGER PRIMARY KEY AUTOINCREMENT,
+        ReadingListID INTEGER PRIMARY KEY,
         UserID INTEGER NOT NULL,
         BookISBN TEXT NOT NULL,
         FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
@@ -81,7 +78,7 @@ create_tables_sql = [
     """,
     """
     CREATE TABLE Notification (
-        NotificationID INTEGER PRIMARY KEY AUTOINCREMENT,
+        NotificationID INTEGER PRIMARY KEY,
         UserID INTEGER NOT NULL,
         Message TEXT NOT NULL,
         NotificationDate TEXT NOT NULL,
@@ -90,82 +87,49 @@ create_tables_sql = [
     """
 ]
 
-def get_existing_tables(engine):
-    inspector = inspect(engine)
-    return inspector.get_table_names()
-
 def drop_all_tables(engine):
-    existing_tables = get_existing_tables(engine)
     with engine.connect() as conn:
-        # Temporarily disable foreign key constraints
         conn.execute(text("PRAGMA foreign_keys = OFF;"))
-        
-        for table in existing_tables:
-            try:
-                conn.execute(text(f"DROP TABLE IF EXISTS {table}"))
-                conn.commit()
-                print(f"Dropped table: {table}")
-            except Exception as e:
-                print(f"Error dropping table {table}: {e}")
-        
-        # Re-enable foreign key constraints
+        inspector = inspect(engine)
+        for table_name in inspector.get_table_names():
+            conn.execute(text(f"DROP TABLE IF EXISTS {table_name}"))
+            print(f"Dropped table: {table_name}")
         conn.execute(text("PRAGMA foreign_keys = ON;"))
-        conn.commit()
 
 def create_schema(engine):
     with engine.connect() as conn:
-        # Enable foreign key support
         conn.execute(text("PRAGMA foreign_keys = ON;"))
-        conn.commit()
-        
-        # Create tables
-        for create_sql in create_tables_sql:
-            try:
-                conn.execute(text(create_sql))
-                conn.commit()
-            except Exception as e:
-                print(f"Error creating table: {e}")
-                raise
-        
+        for sql in create_tables_sql:
+            conn.execute(text(sql))
         print("Database schema created successfully.")
 
 def load_csv_to_sql(table_name, file_path, engine):
     try:
-        # Load CSV into a DataFrame
+        print(f"Loading data for table: {table_name}...")
         df = pd.read_csv(file_path)
-        
-        # Drop any 'Unnamed' columns
-        unnamed_cols = [col for col in df.columns if 'Unnamed' in col]
-        if unnamed_cols:
-            df = df.drop(columns=unnamed_cols)
-            
-        # Drop duplicate columns
+        # Drop the "Unnamed: 0" column if it exists
+        if "Unnamed: 0" in df.columns:
+            df = df.drop(columns=["Unnamed: 0"])
         df = df.loc[:, ~df.columns.duplicated()]
-        
-        # Insert the data into the pre-defined table
         df.to_sql(table_name, con=engine, if_exists='append', index=False)
         print(f"Successfully loaded {table_name} into the database.")
-        
     except Exception as e:
         print(f"Error loading {table_name}: {e}")
-        raise
 
-# Main script
 if __name__ == "__main__":
-    try:
-        # Step 1: Drop all existing tables
-        print("Dropping existing tables...")
-        drop_all_tables(engine)
-        
-        # Step 2: Create fresh schema
-        print("\nCreating new schema...")
-        create_schema(engine)
+    print("Dropping existing tables...")
+    drop_all_tables(engine)
 
-        # Step 3: Load data into the database in the correct order
-        print("\nLoading data...")
+    print("\nCreating database schema...")
+    create_schema(engine)
+
+    print("\nLoading data into tables...")
+    for table_name in tables:
+        if table_name in file_paths:
+            load_csv_to_sql(table_name, file_paths[table_name], engine)
+
+    print("\nValidating data...")
+    with engine.connect() as conn:
         for table_name in tables:
-            if table_name in file_paths:
-                load_csv_to_sql(table_name, file_paths[table_name], engine)
-            
-    except Exception as e:
-        print(f"An error occurred during database setup: {e}")
+            count = conn.execute(text(f"SELECT COUNT(*) FROM {table_name}")).scalar()
+            print(f"Table {table_name}: {count} rows loaded.")

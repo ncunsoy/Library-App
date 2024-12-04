@@ -1,7 +1,7 @@
 ,CommentID,UserID,BookISBN,CommentText,CommentDate
-0,1,Uta Stevens,10061,Harika bir kitap.,2020-05-17
-1,2,Quinlan Key,23847,Ufuk açıcı bir kitap.,2019-08-17
-2,3,Thomas Finch,11118,Tavsiye ederim.,2021-05-09
-3,4,Rae Moses,16925,Okurken çok keyif aldım.,2022-06-21
-4,5,Felicia Pugh,10293,İçeriği oldukça öğretici.,2021-04-03
-5,6,Darryl Brock,10476,Beğenmedim,2023-01-29
+0,1,10012,10061,Harika bir kitap.,2020-05-17
+1,2,10013,23847,Ufuk açıcı bir kitap.,2019-08-17
+2,3,10014,11118,Tavsiye ederim.,2021-05-09
+3,4,10015,16925,Okurken çok keyif aldım.,2022-06-21
+4,5,10016,10293,İçeriği oldukça öğretici.,2021-04-03
+5,6,10012,10476,Beğenmedim,2023-01-29
