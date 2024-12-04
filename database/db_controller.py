@@ -1,5 +1,5 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime as dt
 
 class DatabaseController:
     def __init__(self, db_name='LibraryApp.db'):
@@ -83,7 +83,7 @@ class DatabaseController:
             INSERT INTO Comment (UserID,BookISBN,CommentText,CommentDate)
             VALUES (?, ?, ?, ?)
             """
-            self._cursor.execute(query, (user_id, book_isbn, comment_text, datetime.now()))
+            self._cursor.execute(query, (user_id, book_isbn, comment_text, dt.now().strftime("%Y-%m-%d")))
             self._conn.commit()
             return True
         except sqlite3.Error as e:
@@ -98,7 +98,7 @@ class DatabaseController:
 )
             VALUES (?, ?, ?)
             """
-            self._cursor.execute(query, (user_id, message, datetime.now()))
+            self._cursor.execute(query, (user_id, message, dt.now().strftime("%Y-%m-%d")))
             self._conn.commit()
             return True
         except sqlite3.Error as e:
@@ -126,7 +126,7 @@ class DatabaseController:
             INSERT INTO Reservation (UserID,BookISBN,ReservationDate,DueDate,Status)
             VALUES (?, ?, ?, ?, 'active')
             """
-            self._cursor.execute(query, (user_id, book_isbn, datetime.now(), due_date))
+            self._cursor.execute(query, (user_id, book_isbn, dt.now().strftime("%Y-%m-%d"), due_date))
             self._conn.commit()
             return True
         except sqlite3.Error as e:
@@ -235,6 +235,7 @@ class main:
         print(db.update_book_availability('9781408855652', 4))
         print(db.createBookReport('9781408855652'))
         print(db.createUserReport(10050))
+        print(dt.now().strftime("%Y-%m-%d"))
         # db._cursor.execute("SELECT COUNT(*) FROM Users WHERE UserID = ?", (10050,))
         # if db._cursor.fetchone()[0] == 0:
         #     print(f"UserID {10050} not found.")

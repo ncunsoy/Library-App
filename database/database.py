@@ -24,7 +24,7 @@ create_tables_sql = [
         Name TEXT NOT NULL,
         FavouriteGenre TEXT,
         Password TEXT NOT NULL,
-        Fine REAL DEFAULT 0
+        Fine DOUBLE DEFAULT 0
     )
     """,
     """
@@ -50,7 +50,7 @@ create_tables_sql = [
         UserID INTEGER NOT NULL,
         BookISBN TEXT NOT NULL,
         CommentText TEXT NOT NULL,
-        CommentDate TEXT NOT NULL,
+        CommentDate DATETIME NOT NULL,
         FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
         FOREIGN KEY (BookISBN) REFERENCES Book(ISBN) ON DELETE CASCADE
     )
@@ -60,8 +60,8 @@ create_tables_sql = [
         ReservationID INTEGER PRIMARY KEY,
         UserID INTEGER NOT NULL,
         BookISBN TEXT NOT NULL,
-        ReservationDate TEXT NOT NULL,
-        DueDate TEXT NOT NULL,
+        ReservationDate DATETIME NOT NULL,
+        DueDate DATETIME NOT NULL,
         Status TEXT DEFAULT 'Active',
         FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
         FOREIGN KEY (BookISBN) REFERENCES Book(ISBN) ON DELETE CASCADE
@@ -81,7 +81,7 @@ create_tables_sql = [
         NotificationID INTEGER PRIMARY KEY,
         UserID INTEGER NOT NULL,
         Message TEXT NOT NULL,
-        NotificationDate TEXT NOT NULL,
+        NotificationDate DATETIME NOT NULL,
         FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
     )
     """
