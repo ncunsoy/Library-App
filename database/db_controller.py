@@ -15,7 +15,8 @@ class DatabaseController:
         if self._conn:
             self._conn.close()
 
-    # Kitap Arama Metodları
+    # For both user and staff member classes
+    # SearchBook
     def search_books(self, title=None, author=None, genre=None):
         try:
             conditions = []
@@ -43,7 +44,49 @@ class DatabaseController:
         except sqlite3.Error as e:
             print(f"Arama hatası: {e}")
             return []
+    
 
+    # type kısmına user ise Users, staff ise Staff yazılmalı
+    def change_name(self, type,user_id, new_name):
+        try:
+            query = """
+            UPDATE ?
+            SET Name = ?
+            WHERE UserID = ?
+            """
+            self._cursor.execute(query, (type,new_name, user_id))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Şifre değiştirme hatası: {e}")
+            self._conn.rollback()
+            return False
+        
+        
+    # type kısmına user ise Users, staff ise Staff yazılmalı
+    def change_password(self, type,user_id, new_password):
+        try:
+            query = """
+            UPDATE ?
+            SET Password = ?
+            WHERE UserID = ?
+            """
+            self._cursor.execute(query, (type,new_password, user_id))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Şifre değiştirme hatası: {e}")
+            self._conn.rollback()
+            return False
+
+    
+
+
+    # This part for user class
+
+
+    # GetReccomendations for a user
+    # Get the top 3 most reserved books in the user's favourite genre
     def get_recommendations(self, fav_genre):
         try:
             query = """
@@ -60,23 +103,8 @@ class DatabaseController:
         except sqlite3.Error as e:
             print(f"Öneri getirme hatası: {e}")
             return []
-
-
-    # Ekleme Metodları
-    def add_book(self, isbn, title, authors, description, genre, availability):
-        try:
-            query = """
-            INSERT INTO Book (ISBN,Title,Authors,Description,Genre,Availability)
-            VALUES (?, ?, ?, ?, ?, ?)
-            """
-            self._cursor.execute(query, (isbn, title, authors, description, genre, availability))
-            self._conn.commit()
-            return True
-        except sqlite3.Error as e:
-            print(f"Kitap ekleme hatası: {e}")
-            self._conn.rollback()
-            return False
-
+        
+    # addComment method for user class
     def add_comment(self, user_id, book_isbn, comment_text):
         try:
             query = """
@@ -90,7 +118,149 @@ class DatabaseController:
             print(f"Yorum ekleme hatası: {e}")
             self._conn.rollback()
             return False
+        
 
+    # addReadingList method for user class
+    def add_to_reading_list(self, user_id, book_isbn):
+        try:
+            query = """
+            INSERT INTO ReadingList (UserID,BookISBN)
+            VALUES (?, ?)
+            """
+            self._cursor.execute(query, (user_id, book_isbn))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Okuma listesine ekleme hatası: {e}")
+            self._conn.rollback()
+            return False
+        
+
+    # addReservation method 
+    # It is used in reserveBook method in user class
+    def add_reservation(self, user_id, book_isbn, reservation_date,due_date,status):
+        try:
+            query = """
+            INSERT INTO Reservation (UserID,BookISBN,ReservationDate,DueDate,Status)
+            VALUES (?, ?, ?, ?, ?)
+            """
+            self._cursor.execute(query, (user_id, book_isbn,reservation_date , due_date,status))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Rezervasyon ekleme hatası: {e}")
+            self._conn.rollback()
+            return False
+        
+    # view_dueDate method
+    def view_dueDate(self, user_id):
+        try:
+            query = """
+            SELECT b.Title,r.DueDate
+            FROM Reservation r, Book b, Users u
+            WHERE r.UserID = ?
+            AND r.BookISBN = b.ISBN
+            AND r.UserID = u.UserID
+            """
+            self._cursor.execute(query, (user_id,))
+            return self._cursor.fetchall()
+        except sqlite3.Error as e:
+            print(f"Teslim tarihi görüntüleme hatası: {e}")
+            return []
+        
+    # view_user_reservations method
+    # Kullanıcı tüm rezervasyonlarını görecek. past_reservations için status = "Finished" olacak. Overdue olanlar için ise DueDate'i geçmiş olanlar olacak
+    def view_reservations(self, user_id):
+        try:
+            query = """
+            SELECT b.Title, r.ReservationDate, r.DueDate, r.Status
+            FROM Reservation r, Book b, Users u
+            WHERE r.UserID = ?
+            AND r.BookISBN = b.ISBN
+            AND r.UserID = u.UserID
+            """
+            self._cursor.execute(query, (user_id,))
+            return self._cursor.fetchall()
+        except sqlite3.Error as e:
+            print(f"Geçmiş rezervasyonları görüntüleme hatası: {e}")
+            return []
+        
+        
+    
+    def make_reading_list(self, user_id,book_isbn):
+        try:
+            query = """
+            INSERT INTO ReadingList (UserID,BookISBN)
+            VALUES (?, ?)
+            """
+            self._cursor.execute(query, (user_id, book_isbn))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Okuma listesi oluşturma hatası: {e}")
+            self._conn.rollback()
+            return False
+        
+
+    def set_favorite_genre(self, user_id, genre):
+        try:
+            query = """
+            UPDATE Users
+            SET FavouriteGenre = ?
+            WHERE UserID = ?
+            """
+            self._cursor.execute(query, (genre, user_id))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Beğenilen türü ayarlama hatası: {e}")
+            self._conn.rollback()
+            return False
+        
+    
+    def extend_due_date(self, user_id, book_isbn, new_due_date):
+        try:
+            query = """
+            UPDATE Reservation
+            SET DueDate = ?
+            WHERE UserID = ? AND BookISBN = ?
+            """
+            self._cursor.execute(query, (new_due_date, user_id, book_isbn))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Teslim tarihini uzatma hatası: {e}")
+            self._conn.rollback()
+            return False
+
+
+
+
+
+
+
+
+
+
+    # This part for staff member class
+
+    # AddBook method for staff member class
+    def add_book(self, isbn, title, authors, description, genre, availability):
+        try:
+            query = """
+            INSERT INTO Book (ISBN,Title,Authors,Description,Genre,Availability)
+            VALUES (?, ?, ?, ?, ?, ?)
+            """
+            self._cursor.execute(query, (isbn, title, authors, description, genre, availability))
+            self._conn.commit()
+            return True
+        except sqlite3.Error as e:
+            print(f"Kitap ekleme hatası: {e}")
+            self._conn.rollback()
+            return False
+    
+    
+    # add_notification method for staff member class
     def add_notification(self, user_id, message):
         try:
             query = """
@@ -106,34 +276,8 @@ class DatabaseController:
             self._conn.rollback()
             return False
 
-    def add_to_reading_list(self, user_id, book_isbn):
-        try:
-            query = """
-            INSERT INTO ReadingList (UserID,BookISBN)
-            VALUES (?, ?)
-            """
-            self._cursor.execute(query, (user_id, book_isbn))
-            self._conn.commit()
-            return True
-        except sqlite3.Error as e:
-            print(f"Okuma listesine ekleme hatası: {e}")
-            self._conn.rollback()
-            return False
 
-    def add_reservation(self, user_id, book_isbn, due_date):
-        try:
-            query = """
-            INSERT INTO Reservation (UserID,BookISBN,ReservationDate,DueDate,Status)
-            VALUES (?, ?, ?, ?, 'active')
-            """
-            self._cursor.execute(query, (user_id, book_isbn, dt.now().strftime("%Y-%m-%d"), due_date))
-            self._conn.commit()
-            return True
-        except sqlite3.Error as e:
-            print(f"Rezervasyon ekleme hatası: {e}")
-            self._conn.rollback()
-            return False
-
+    # addUser method for staff member class
     def add_user(self, name, password, favourite_genre):
         try:
             query = """
@@ -148,7 +292,7 @@ class DatabaseController:
             self._conn.rollback()
             return False
 
-    # Güncelleme Metodları
+    # updateFine method for staff member class
     def update_fine(self, user_id, amount):
         try:
             query = """
@@ -164,7 +308,8 @@ class DatabaseController:
             self._conn.rollback()
             return False
         
-    
+    # updateBookAvailability method for staff member class
+    # Kullanıcı kitabı teslim ettiğinde staff member kitabın durumunu günceller
     def update_book_availability(self, isbn, availability):
         try:
             query = """
@@ -180,7 +325,7 @@ class DatabaseController:
             self._conn.rollback()
             return False
         
-
+    # createBookReport method for staff member class
     def createBookReport(self, isbn):
         try:
             query = """
@@ -202,7 +347,7 @@ class DatabaseController:
 
         
  
-    
+    # createUserReport method for staff member class
     def createUserReport(self,user_id):
         try:
             query = """
@@ -229,7 +374,7 @@ class main:
         print(db.add_comment(10050, '9781408855652', 'This is a great book!'))
         print(db.add_notification(10050, 'You have a new notification!'))
         print(db.add_to_reading_list(10050, '9781408855652'))
-        print(db.add_reservation(10050, '9781408855652', '2021-12-31'))
+        print(db.add_reservation(10050, '9781408855652', '2021-12-31','2021-12-31',"Active"))
         print(db.add_user('John Doe', 'password', 'Fantasy'))
         print(db.update_fine(10050, 5))
         print(db.update_book_availability('9781408855652', 4))
