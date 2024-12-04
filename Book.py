@@ -56,12 +56,12 @@ class Book:
         return self._dueDate
     
     def setDueDate(self,user_id,dueDate):
-        #after add db controller,update this method
-        self.controller.update_dueDate(user_id,self._ısbn,dueDate)
+        ###
+        self.controller.extend_due_date(user_id,self._ısbn,dueDate)
     
     def getCurrentBorrower(self):
         return self._currentBorrowerID
     
     def setCurrentBorrower(self,user_id):
-        #after add db controller,update this method
-        self.controller.update_currentBorrower(self._ısbn,user_id)
+        ###
+        self._currentBorrowerID=user_id
