@@ -2,7 +2,7 @@ import sqlite3
 from datetime import datetime
 
 class DatabaseController:
-    def __init__(self, db_name):
+    def __init__(self, db_name='LibraryApp.db'):
         try:
             self._conn = sqlite3.connect('LibraryApp.db')
             self._cursor = self._conn.cursor()
@@ -148,7 +148,7 @@ class DatabaseController:
     def update_fine(self, user_id, amount):
         try:
             query = """
-            UPDATE Users 
+            UPDATE User
             SET Fine = fine + ? 
             WHERE UserID = ?
             """
@@ -177,35 +177,60 @@ class DatabaseController:
             return False
         
 
-    def createBookReport(self,isbn):
+    def createBookReport(self, isbn):
         try:
             query = """
-            SELECT b.Title, b.Authors, b.Description, b.Genre, COUNT(r.ReservationID) COUNT(c.CommentID) as CommentCount 
-            FROM Book as b,Reservation as r,Comment as c
-            WHERE ISBN = ? and
-            r.BookISBN = b.ISBN and
-            c.BookISBN = b.ISBN
+            SELECT 
+                b.Title, 
+                b.Authors, 
+                b.Description, 
+                b.Genre, 
+                (SELECT COUNT(*) FROM Reservation WHERE BookISBN = b.ISBN) AS ReservationCount,
+                (SELECT COUNT(*) FROM Comment WHERE BookISBN = b.ISBN) AS CommentCount
+            FROM Book AS b
+            WHERE b.ISBN = ?
             """
             self._cursor.execute(query, (isbn,))
-            return self._cursor.fetchall()
-        
+            return self._cursor.fetchone()
         except sqlite3.Error as e:
             print(f"Rapor oluşturma hatası: {e}")
             return []
+
         
+ 
     
     def createUserReport(self,user_id):
         try:
             query = """
-            SELECT u.Name, u.FavouriteGenre, COUNT(r.ReservationID) as ReservationCount, COUNT(c.CommentID) as CommentCount
-            FROM Users as u,Reservation as r,Comment as c
-            WHERE u.UserID = ? and
-            r.UserID = u.UserID and
-            c.UserID = u.UserID
+            SELECT u.Name, u.FavouriteGenre, 
+               (SELECT COUNT(*) FROM Reservation WHERE  r.UserID = u.UserID) as ReservationCount,
+               (SELECT COUNT(*) FROM Comment WHERE c.UserID = u.UserID) as CommentCount
+            FROM Users as u
+            WHERE u.UserID = ?
             """
-            self._cursor.execute(query, (user_id))
+            self._cursor.execute(query, (user_id,))
             return self._cursor.fetchall()
         
         except sqlite3.Error as e:
             print(f"Rapor oluşturma hatası: {e}")
             return []
+        
+
+class main:
+    def main():
+        db = DatabaseController()
+        print(db.search_books(title='Harry Potter'))
+        print(db.get_recommendations('Fantasy'))
+        print(db.add_book('9781408855652', 'Harry Potter and the Philosopher\'s Stone', 'J.K. Rowling', 'The book that started it all.', 'Fantasy', 5))
+        print(db.add_comment(1, '9781408855652', 'This is a great book!'))
+        print(db.add_notification(1, 'You have a new notification!'))
+        print(db.add_to_reading_list(1, '9781408855652'))
+        print(db.add_reservation(1, '9781408855652', '2021-12-31'))
+        print(db.add_user('John Doe', 'password', 'Fantasy'))
+        print(db.update_fine(1, 5))
+        print(db.update_book_availability('9781408855652', 4))
+        print(db.createBookReport('9781408855652'))
+        print(db.createUserReport(1))
+
+if __name__ == "__main__":
+    main.main()
