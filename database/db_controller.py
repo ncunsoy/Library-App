@@ -92,7 +92,7 @@ class DatabaseController:
             query = """
             SELECT b.ISBN, b.Title, COUNT(*) as ReservationCount
             FROM Book b
-            JOIN Reservation r ON b.ISBN = r.BookISBN
+            LEFT JOIN Reservation r ON b.ISBN = r.BookISBN
             WHERE b.Genre = ?
             GROUP BY b.ISBN, b.Title
             ORDER BY ReservationCount DESC
@@ -366,26 +366,111 @@ class DatabaseController:
         
 
 class main:
-    def main():
+    def test1():
         db = DatabaseController()
-        print(db.search_books(title='Harry Potter'))
-        print(db.get_recommendations('Fantasy'))
-        print(db.add_book('9781408855652', 'Harry Potter and the Philosopher\'s Stone', 'J.K. Rowling', 'The book that started it all.', 'Fantasy', 5))
-        print(db.add_comment(10050, '9781408855652', 'This is a great book!'))
-        print(db.add_notification(10050, 'You have a new notification!'))
-        print(db.add_to_reading_list(10050, '9781408855652'))
-        print(db.add_reservation(10050, '9781408855652', '2021-12-31','2021-12-31',"Active"))
-        print(db.add_user('John Doe', 'password', 'Fantasy'))
-        print(db.update_fine(10050, 5))
-        print(db.update_book_availability('9781408855652', 4))
-        print(db.createBookReport('9781408855652'))
-        print(db.createUserReport(10050))
-        print(dt.now().strftime("%Y-%m-%d"))
+        # print(db.search_books(title='Harry Potter'))
+        print(db.get_recommendations('Fiction'))
+        # print(db.add_book('9781408855652', 'Harry Potter and the Philosopher\'s Stone', 'J.K. Rowling', 'The book that started it all.', 'Fantasy', 5))
+        # print(db.add_comment(10050, '9781408855652', 'This is a great book!'))
+        # print(db.add_notification(10050, 'You have a new notification!'))
+        # print(db.add_to_reading_list(10050, '9781408855652'))
+        # print(db.add_reservation(10050, '9781408855652', '2021-12-31','2021-12-31',"Active"))
+        # print(db.add_user('John Doe', 'password', 'Fantasy'))
+        # print(db.update_fine(10050, 5))
+        # print(db.update_book_availability('9781408855652', 4))
+        # print(db.createBookReport('9781408855652'))
+        # print(db.createUserReport(10050))
+        # print(dt.now().strftime("%Y-%m-%d"))
         # db._cursor.execute("SELECT COUNT(*) FROM Users WHERE UserID = ?", (10050,))
         # if db._cursor.fetchone()[0] == 0:
         #     print(f"UserID {10050} not found.")
         #     return []
 
 
+
+    def test2():
+        # Veritabanı kontrolcüsü nesnesi oluştur
+        db = DatabaseController()
+
+        # Test 1: Kitap ekleme
+        print("Kitap ekleme testi...")
+        success = db.add_book(
+            isbn="97831614841",
+            title="Test Kitabı",
+            authors="Yazar Adı",
+            description="Bu bir test kitabıdır.",
+            genre="Bilim Kurgu",
+            availability=True
+        )
+        print("Kitap ekleme başarılı mı:", success)
+
+        # Test 2: Kullanıcı ekleme
+        print("\nKullanıcı ekleme testi...")
+        success = db.add_user(
+            name="Test Kullanıcı",
+            password="12345",
+            favourite_genre="Bilim Kurgu"
+        )
+        print("Kullanıcı ekleme başarılı mı:", success)
+
+        # Test 3: Kitap arama
+        print("\nKitap arama testi...")
+        books = db.search_books(title="Test")
+        print("Bulunan kitaplar:", books)
+
+        # Test 4: Yorum ekleme
+        print("\nYorum ekleme testi...")
+        if books:
+            book_isbn = books[0][0]  # İlk bulunan kitabın ISBN'si
+            success = db.add_comment(
+                user_id=1,  # Varsayılan bir kullanıcı ID'si
+                book_isbn=book_isbn,
+                comment_text="Bu bir test yorumudur."
+            )
+            print("Yorum ekleme başarılı mı:", success)
+
+        # Test 5: Rezervasyon ekleme
+        print("\nRezervasyon ekleme testi...")
+        success = db.add_reservation(
+            user_id=10035,
+            book_isbn="97831614841",
+            reservation_date="2024-12-05",
+            due_date="2024-12-15",
+            status="Active"
+        )
+        print("Rezervasyon ekleme başarılı mı:", success)
+
+        # Test 6: Kullanıcı rezervasyonlarını görüntüleme
+        print("\nRezervasyon görüntüleme testi...")
+        reservations = db.view_reservations(user_id=10035)
+        print("Kullanıcı rezervasyonları:", reservations)
+
+        # Test 7: Kullanıcıya öneri alma
+        print("\nÖneri alma testi...")
+        recommendations = db.get_recommendations(fav_genre="Fiction")
+        print("Önerilen kitaplar:", recommendations)
+
+        # Test 8: Teslim tarihi uzatma
+        print("\nTeslim tarihi uzatma testi...")
+        success = db.extend_due_date(
+            user_id=1,
+            book_isbn="97831614841",
+            new_due_date="2024-12-20"
+        )
+        print("Teslim tarihi uzatma başarılı mı:", success)
+
+        # Test 9: Kullanıcı raporu oluşturma
+        print("\nKullanıcı raporu testi...")
+        user_report = db.createUserReport(user_id=10035)
+        print("Kullanıcı raporu:", user_report)
+
+        # Test 10: Kitap raporu oluşturma
+        print("\nKitap raporu testi...")
+        book_report = db.createBookReport(isbn="97831614841")
+        print("Kitap raporu:", book_report)
+
+
+
 if __name__ == "__main__":
-    main.main()
+    # main.test1()
+    main.test2()
