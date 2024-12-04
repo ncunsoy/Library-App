@@ -148,7 +148,7 @@ class DatabaseController:
     def update_fine(self, user_id, amount):
         try:
             query = """
-            UPDATE User
+            UPDATE Users
             SET Fine = fine + ? 
             WHERE UserID = ?
             """
@@ -185,8 +185,8 @@ class DatabaseController:
                 b.Authors, 
                 b.Description, 
                 b.Genre, 
-                (SELECT COUNT(*) FROM Reservation WHERE BookISBN = b.ISBN) AS ReservationCount,
-                (SELECT COUNT(*) FROM Comment WHERE BookISBN = b.ISBN) AS CommentCount
+                (SELECT COUNT(*) FROM Reservation as r WHERE b.ISBN = r.BookISBN) AS ReservationCount,
+                (SELECT COUNT(*) FROM Comment as c WHERE c.BookISBN = b.ISBN) AS CommentCount
             FROM Book AS b
             WHERE b.ISBN = ?
             """
@@ -203,8 +203,8 @@ class DatabaseController:
         try:
             query = """
             SELECT u.Name, u.FavouriteGenre, 
-               (SELECT COUNT(*) FROM Reservation WHERE  r.UserID = u.UserID) as ReservationCount,
-               (SELECT COUNT(*) FROM Comment WHERE c.UserID = u.UserID) as CommentCount
+               (SELECT COUNT(*) FROM Reservation as r WHERE  r.UserID = u.UserID) as ReservationCount,
+               (SELECT COUNT(*) FROM Comment as c WHERE c.UserID = u.UserID) as CommentCount
             FROM Users as u
             WHERE u.UserID = ?
             """
@@ -222,15 +222,20 @@ class main:
         print(db.search_books(title='Harry Potter'))
         print(db.get_recommendations('Fantasy'))
         print(db.add_book('9781408855652', 'Harry Potter and the Philosopher\'s Stone', 'J.K. Rowling', 'The book that started it all.', 'Fantasy', 5))
-        print(db.add_comment(1, '9781408855652', 'This is a great book!'))
-        print(db.add_notification(1, 'You have a new notification!'))
-        print(db.add_to_reading_list(1, '9781408855652'))
-        print(db.add_reservation(1, '9781408855652', '2021-12-31'))
+        print(db.add_comment(10050, '9781408855652', 'This is a great book!'))
+        print(db.add_notification(10050, 'You have a new notification!'))
+        print(db.add_to_reading_list(10050, '9781408855652'))
+        print(db.add_reservation(10050, '9781408855652', '2021-12-31'))
         print(db.add_user('John Doe', 'password', 'Fantasy'))
-        print(db.update_fine(1, 5))
+        print(db.update_fine(10050, 5))
         print(db.update_book_availability('9781408855652', 4))
         print(db.createBookReport('9781408855652'))
-        print(db.createUserReport(1))
+        print(db.createUserReport(10050))
+        # db._cursor.execute("SELECT COUNT(*) FROM Users WHERE UserID = ?", (10050,))
+        # if db._cursor.fetchone()[0] == 0:
+        #     print(f"UserID {10050} not found.")
+        #     return []
+
 
 if __name__ == "__main__":
     main.main()
