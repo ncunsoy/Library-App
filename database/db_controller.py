@@ -47,9 +47,12 @@ class DatabaseController:
     def get_recommendations(self, fav_genre):
         try:
             query = """
-            SELECT ISBN, Title 
-            FROM Book 
-            WHERE Genre = ? 
+            SELECT b.ISBN, b.Title, COUNT(*) as ReservationCount
+            FROM Book b
+            JOIN Reservation r ON b.ISBN = r.BookISBN
+            WHERE b.Genre = ?
+            GROUP BY b.ISBN, b.Title
+            ORDER BY ReservationCount DESC
             LIMIT 3
             """
             self._cursor.execute(query, (fav_genre,))
@@ -57,6 +60,7 @@ class DatabaseController:
         except sqlite3.Error as e:
             print(f"Öneri getirme hatası: {e}")
             return []
+
 
     # Ekleme Metodları
     def add_book(self, isbn, title, authors, description, genre, availability):
