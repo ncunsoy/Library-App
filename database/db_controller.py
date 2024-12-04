@@ -21,15 +21,15 @@ class DatabaseController:
             params = []
             
             if title:
-                conditions.append("title LIKE ?")
+                conditions.append("Title LIKE ?")
                 params.append(f"%{title}%")
             
             if author:
-                conditions.append("authors LIKE ?")
+                conditions.append("Authors LIKE ?")
                 params.append(f"%{author}%")
                 
             if genre:
-                conditions.append("genre = ?")
+                conditions.append("Genre = ?")
                 params.append(genre)
 
             query = "SELECT * FROM Book"
@@ -46,9 +46,9 @@ class DatabaseController:
     def get_recommendations(self, fav_genre):
         try:
             query = """
-            SELECT isbn, title 
+            SELECT ISBN, Title 
             FROM Book 
-            WHERE genre = ? 
+            WHERE Genre = ? 
             LIMIT 3
             """
             self._cursor.execute(query, (fav_genre,))
@@ -61,7 +61,7 @@ class DatabaseController:
     def add_book(self, isbn, title, authors, description, genre, availability):
         try:
             query = """
-            INSERT INTO Book (isbn, title, authors, description, genre, availability)
+            INSERT INTO Book (ISBN,Title,Authors,Description,Genre,Availability)
             VALUES (?, ?, ?, ?, ?, ?)
             """
             self._cursor.execute(query, (isbn, title, authors, description, genre, availability))
@@ -75,7 +75,7 @@ class DatabaseController:
     def add_comment(self, user_id, book_isbn, comment_text):
         try:
             query = """
-            INSERT INTO Comment (user_id, book_isbn, comment_text, comment_date)
+            INSERT INTO Comment (UserID,BookISBN,CommentText,CommentDate)
             VALUES (?, ?, ?, ?)
             """
             self._cursor.execute(query, (user_id, book_isbn, comment_text, datetime.now()))
@@ -89,7 +89,8 @@ class DatabaseController:
     def add_notification(self, user_id, message):
         try:
             query = """
-            INSERT INTO Notification (user_id, message, notification_date)
+            INSERT INTO Notification (UserID,Message,NotificationDate
+)
             VALUES (?, ?, ?)
             """
             self._cursor.execute(query, (user_id, message, datetime.now()))
@@ -103,7 +104,7 @@ class DatabaseController:
     def add_to_reading_list(self, user_id, book_isbn):
         try:
             query = """
-            INSERT INTO ReadingList (user_id, book_isbn)
+            INSERT INTO ReadingList (UserID,BookISBN)
             VALUES (?, ?)
             """
             self._cursor.execute(query, (user_id, book_isbn))
@@ -117,7 +118,7 @@ class DatabaseController:
     def add_reservation(self, user_id, book_isbn, due_date):
         try:
             query = """
-            INSERT INTO Reservation (user_id, book_isbn, reservation_date, due_date, status)
+            INSERT INTO Reservation (UserID,BookISBN,ReservationDate,DueDate,Status)
             VALUES (?, ?, ?, ?, 'active')
             """
             self._cursor.execute(query, (user_id, book_isbn, datetime.now(), due_date))
@@ -131,7 +132,7 @@ class DatabaseController:
     def add_user(self, name, password, favourite_genre):
         try:
             query = """
-            INSERT INTO Users (name, password, favourite_genre, fine)
+            INSERT INTO Users (Name,FavouriteGenre,Password,Fine)
             VALUES (?, ?, ?, 0)
             """
             self._cursor.execute(query, (name, password, favourite_genre))
@@ -147,8 +148,8 @@ class DatabaseController:
         try:
             query = """
             UPDATE Users 
-            SET fine = fine + ? 
-            WHERE user_id = ?
+            SET Fine = fine + ? 
+            WHERE UserID = ?
             """
             self._cursor.execute(query, (amount, user_id))
             self._conn.commit()
@@ -163,8 +164,8 @@ class DatabaseController:
         try:
             query = """
             UPDATE Book 
-            SET availability = ? 
-            WHERE isbn = ?
+            SET Availability = ? 
+            WHERE ISBN = ?
             """
             self._cursor.execute(query, (availability, isbn))
             self._conn.commit()
@@ -180,7 +181,7 @@ class DatabaseController:
             query = """
             SELECT b.Title, b.Authors, b.Description, b.Genre, COUNT(r.ReservationID) COUNT(c.CommentID) as CommentCount 
             FROM Book as b,Reservation as r,Comment as c
-            WHERE isbn = ? and
+            WHERE ISBN = ? and
             r.BookISBN = b.ISBN and
             c.BookISBN = b.ISBN
             """
