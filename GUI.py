@@ -188,6 +188,23 @@ class LibraryApp:
         genre_combobox.set("Select Genre")
         genre_combobox.grid(row=1, column=3, padx=5, pady=5)
 
+
+        # Profil simgesini ekleme
+        profile_icon = Image.open("user_icon.png")  # İkon dosyasını yükle
+        profile_icon = profile_icon.resize((100, 100), Image.LANCZOS)  # Boyutlandır
+        profile_image = ImageTk.PhotoImage(profile_icon)
+
+        profile_button = tk.Button(
+            self.root,
+            image=profile_image,
+            command=self.open_profile_screen,  # Yeni ekran açacak fonksiyon
+            bg="white",
+            bd=0
+        )
+        profile_button.image = profile_image  # Referansı kaybetmemek için sakla
+        profile_button.place(relx=0.85, rely=0.1)  # Sağ üst köşeye yerleştir
+
+
         # Search Icon
         search_icon = Image.open("search_icon.png")  # Simge dosyasını yükleme
         search_icon = search_icon.resize((25, 25), Image.LANCZOS)  # Simgeyi yeniden boyutlandırma
@@ -251,6 +268,131 @@ class LibraryApp:
         self.notification_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
 
+
+    def initialize_staff_dashboard(self):
+        """Set up the user dashboard with a search bar and notification panel."""
+        self.clear_screen()
+
+
+        # Başlık
+        tk.Label(self.root, text="Library Management System", font=("Arial", 18, "bold")).pack(pady=10)
+        tk.Label(self.root, text=f"Welcome, {self.current_user._name}!", font=("Arial", 14)).pack(pady=5)
+
+    
+        # Arama Çubuğu Çerçevesi
+        search_frame = tk.Frame(self.root)
+        search_frame.pack(pady=10, padx=20, anchor="nw")
+
+        # Title
+        tk.Label(search_frame, text="Title:", font=("Arial", 12)).grid(row=0, column=0, padx=(0, 5), pady=5, sticky=tk.W)
+        title_entry = tk.Entry(search_frame, font=("Arial", 12), width=20)
+        title_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        # Author
+        tk.Label(search_frame, text="Author:", font=("Arial", 12)).grid(row=1, column=0, padx=(0, 5), pady=5, sticky=tk.W)
+        author_entry = tk.Entry(search_frame, font=("Arial", 12), width=20)
+        author_entry.grid(row=1, column=1, padx=5, pady=5)
+
+        # Genre
+        tk.Label(search_frame, text="Genre:", font=("Arial", 12)).grid(row=1, column=2, padx=(10, 5), pady=5, sticky=tk.E)
+        genre_combobox = ttk.Combobox(search_frame, font=("Arial", 12), state="readonly", width=15)
+        genres = [""] + self.fetch_genres_from_db()  # Boş değer ekleniyor
+        genre_combobox['values'] = genres
+        genre_combobox.set("Select Genre")
+        genre_combobox.grid(row=1, column=3, padx=5, pady=5)
+
+
+        # Profil simgesini ekleme
+        profile_icon = Image.open("user_icon.png")  # İkon dosyasını yükle
+        profile_icon = profile_icon.resize((100, 100), Image.LANCZOS)  # Boyutlandır
+        profile_image = ImageTk.PhotoImage(profile_icon)
+
+        profile_button = tk.Button(
+            self.root,
+            image=profile_image,
+            command=self.open_profile_screen,  # Yeni ekran açacak fonksiyon
+            bg="white",
+            bd=0
+        )
+        profile_button.image = profile_image  # Referansı kaybetmemek için sakla
+        profile_button.place(relx=0.85, rely=0.1)  # Sağ üst köşeye yerleştir
+
+
+        # Search Icon
+        search_icon = Image.open("search_icon.png")  # Simge dosyasını yükleme
+        search_icon = search_icon.resize((25, 25), Image.LANCZOS)  # Simgeyi yeniden boyutlandırma
+        search_image = ImageTk.PhotoImage(search_icon)
+
+        search_button = tk.Button(
+            search_frame,
+            image=search_image,
+            command=lambda: self.update_search_results(
+                title=title_entry.get().strip(),
+                author=author_entry.get().strip(),
+                genre=genre_combobox.get() if genre_combobox.get() not in ["", "Select Genre"] else None
+            ),
+            bg="white",
+            bd=0
+        )
+        search_button.grid(row=0, column=3, rowspan=1, padx=(10, 0), pady=5)
+        self.search_icon = search_image  # Simge referansı korunuyor
+
+        # Sonuç Çerçevesi
+        self.results_frame = tk.Frame(self.root, width=600)  # ÖNEMLİ: `self.results_frame` tanımlanıyor
+        self.results_frame.pack(side=tk.LEFT, padx=(20, 10), pady=(10, 0), fill=tk.Y)
+        tk.Label(self.results_frame, text="Search Results:", font=("Arial", 14, "bold"), anchor="w").pack(anchor="w")
+
+        # Treeview
+        columns = ("Title", "Author", "Genre")
+        self.tree = ttk.Treeview(self.results_frame, columns=columns, show="headings", height=15)
+        self.tree.heading("Title", text="Title")
+        self.tree.heading("Author", text="Author")
+        self.tree.heading("Genre", text="Genre")
+        self.tree.pack(fill=tk.BOTH, expand=True, pady=5)
+
+        # Scrollbar ekleme
+        scrollbar = ttk.Scrollbar(self.results_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscroll=scrollbar.set)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+       
+        # Bildirim Paneli
+        self.notification_frame = tk.Frame(self.root, bg="red", width=200, height=600)  # Genişlik ve yükseklik sabitlendi
+        self.notification_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=10, pady=10)
+        self.notification_frame.pack_propagate(False)  # İçeriklere göre yeniden boyutlanmayı engeller
+
+        # Başlık
+        tk.Label(
+            self.notification_frame,
+            text="Notifications",
+            font=("Arial", 14, "bold"),
+            bg="red",
+            fg="white"
+        ).pack(pady=10)
+
+        # Bildirim Listesi
+        self.notification_list = tk.Listbox(
+            self.notification_frame,
+            font=("Arial", 12),
+            bg="white",
+            height=25,  # Listbox yüksekliği artırıldı
+            width=30    # Listbox genişliği sabitlendi
+        )
+        self.notification_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+
+    def open_profile_screen(self):
+        """Kullanıcı profili için yeni bir ekran aç."""
+        profile_window = tk.Toplevel(self.root)
+        profile_window.title("User Profile")
+        profile_window.geometry("400x400")  # Yeni pencere boyutu
+
+        tk.Label(profile_window, text="User Profile", font=("Arial", 16, "bold")).pack(pady=10)
+        tk.Label(profile_window, text=f"Username: {self.current_user._name}", font=("Arial", 12)).pack(pady=5)
+        tk.Label(profile_window, text=f"User ID: {self.current_user._user_id}", font=("Arial", 12)).pack(pady=5)
+        tk.Label(profile_window, text=f"Favourite Genre: {self.current_user._favourite_genre}", font=("Arial", 12)).pack(pady=5)
+
+
     def show_book_details(self, item_values):
         """Show the selected book's details in a new window with separate frames for details and comments."""
         # Create a new window for book details
@@ -293,11 +435,15 @@ class LibraryApp:
         def add_comment():
             comment = comment_entry.get().strip()
             if comment:
-                comment_list.insert(tk.END, comment)
-                self.current_user.add_comment(comment)  # Update database
-                messagebox.showinfo("Comment Added", "Your comment has been added!")
+                result = self.current_user.add_comment(item_values[0], comment)  # Pass the ISBN and comment
+                if result == "Comment Added":
+                    comment_list.insert(tk.END, comment)
+                    messagebox.showinfo("Comment Added", "Your comment has been added!")
+                else:
+                    messagebox.showerror("Error", result)
             else:
                 messagebox.showerror("Error", "Please enter a comment.")
+
 
         tk.Button(
             comment_frame,
@@ -310,11 +456,14 @@ class LibraryApp:
 
         # Reserve Book Button
         def reserve_book():
-            result = self.current_user.reserve_book(item_values[0])  # ISBN value
+            result = self.current_user.reserve_book(item_values[0])  # Pass the ISBN
             if result == "Reserved":
                 messagebox.showinfo("Success", "The book has been successfully reserved.")
             elif result == "Added to Waitlist":
                 messagebox.showinfo("Waitlist", "The book is unavailable. You have been added to the waitlist.")
+            else:
+                messagebox.showerror("Error", result)
+
 
         tk.Button(
             details_frame,
