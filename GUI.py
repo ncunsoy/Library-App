@@ -225,6 +225,7 @@ class LibraryApp:
         self.tree.configure(yscroll=scrollbar.set)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
+       
         # Bildirim Paneli
         self.notification_frame = tk.Frame(self.root, bg="red", width=200, height=600)  # Genişlik ve yükseklik sabitlendi
         self.notification_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=10, pady=10)
@@ -248,6 +249,81 @@ class LibraryApp:
             width=30    # Listbox genişliği sabitlendi
         )
         self.notification_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+
+    def show_book_details(self, item_values):
+        """Show the selected book's details in a new window with separate frames for details and comments."""
+        # Create a new window for book details
+        details_window = tk.Toplevel(self.root)
+        details_window.title("Book Details")
+        details_window.geometry("500x500")  # Set window size
+
+        # Frame for Book Details
+        details_frame = tk.Frame(details_window, borderwidth=2, relief="groove", padx=10, pady=10)
+        details_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Book Details
+        tk.Label(details_frame, text=f"Title: {item_values[0]}", font=("Arial", 12)).pack(anchor="w", pady=5)
+        tk.Label(details_frame, text=f"Author: {item_values[1]}", font=("Arial", 12)).pack(anchor="w", pady=5)
+        tk.Label(details_frame, text=f"Genre: {item_values[2]}", font=("Arial", 12)).pack(anchor="w", pady=5)
+
+        # Placeholder description and availability
+        description = "A detailed description of the book."  # Replace with real description from the database
+        availability = "Available"  # Replace with actual availability from the database
+        tk.Label(details_frame, text=f"Description: {description}", font=("Arial", 12), wraplength=400, justify="left").pack(anchor="w", pady=5)
+        tk.Label(details_frame, text=f"Availability: {availability}", font=("Arial", 12)).pack(anchor="w", pady=5)
+
+        # Frame for Comments
+        comment_frame = tk.Frame(details_window, borderwidth=2, relief="groove", padx=10, pady=10)
+        comment_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Add Comment Label and Entry
+        tk.Label(comment_frame, text="Add a Comment:", font=("Arial", 12)).pack(anchor="w", pady=5)
+        comment_entry = tk.Entry(comment_frame, font=("Arial", 12), width=40)
+        comment_entry.pack(anchor="w", pady=5)
+
+        # Scrollable Comment Box
+        comment_scroll = tk.Scrollbar(comment_frame, orient="vertical")
+        comment_list = tk.Listbox(comment_frame, font=("Arial", 12), yscrollcommand=comment_scroll.set, height=10)
+        comment_scroll.config(command=comment_list.yview)
+        comment_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        comment_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+        # Add Comment Button
+        def add_comment():
+            comment = comment_entry.get().strip()
+            if comment:
+                comment_list.insert(tk.END, comment)
+                self.current_user.add_comment(comment)  # Update database
+                messagebox.showinfo("Comment Added", "Your comment has been added!")
+            else:
+                messagebox.showerror("Error", "Please enter a comment.")
+
+        tk.Button(
+            comment_frame,
+            text="Add Comment",
+            command=add_comment,
+            font=("Arial", 12),
+            bg="blue",
+            fg="white"
+        ).pack(anchor="w", pady=10)
+
+        # Reserve Book Button
+        def reserve_book():
+            result = self.current_user.reserve_book(item_values[0])  # ISBN value
+            if result == "Reserved":
+                messagebox.showinfo("Success", "The book has been successfully reserved.")
+            elif result == "Added to Waitlist":
+                messagebox.showinfo("Waitlist", "The book is unavailable. You have been added to the waitlist.")
+
+        tk.Button(
+            details_frame,
+            text="Reserve Book",
+            command=reserve_book,
+            font=("Arial", 12),
+            bg="green",
+            fg="white"
+        ).pack(anchor="w", pady=10)
 
 
     
@@ -300,17 +376,17 @@ class LibraryApp:
         for widget in self.results_frame.winfo_children():
             widget.destroy()
 
-        # Treeview widget'ı oluştur
+        # Treeview widget'ı oluştur ve `self.tree` olarak kaydet
         columns = ("Title", "Author", "Genre")
-        tree = ttk.Treeview(self.results_frame, columns=columns, show="headings", height=10)
-        tree.heading("Title", text="Title")
-        tree.heading("Author", text="Author")
-        tree.heading("Genre", text="Genre")
-        tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.tree = ttk.Treeview(self.results_frame, columns=columns, show="headings", height=10)
+        self.tree.heading("Title", text="Title")
+        self.tree.heading("Author", text="Author")
+        self.tree.heading("Genre", text="Genre")
+        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # Scrollbar ekleme ve Treeview'e bağlama
-        scrollbar = ttk.Scrollbar(self.results_frame, orient="vertical", command=tree.yview)
-        tree.configure(yscroll=scrollbar.set)
+        scrollbar = ttk.Scrollbar(self.results_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscroll=scrollbar.set)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
         results = None
@@ -329,29 +405,28 @@ class LibraryApp:
                 genre_results = set(self.current_user.search_by_genre(genre))
                 results = genre_results if results is None else results.intersection(genre_results)
 
-
-            
             # Sonuçları ekrana yazdır
             if not results:
                 tk.Label(self.results_frame, text="No books found.", font=("Arial", 12), bg="white").pack(anchor="w", pady=5)
             else:
                 for book in results:
                     # book: (isbn, title, authors, description, genre, availability)
-                    tree.insert("", "end", values=(book[1], book[2], book[4]))
+                    self.tree.insert("", "end", values=(book[1], book[2], book[4]))  # Kitap bilgilerini Treeview'e ekle
 
                 # Seçim olayını bağlama
                 def on_item_select(event):
-                    selected_item = tree.focus()  # Seçilen öğenin ID'sini al
-                    item_values = tree.item(selected_item, "values")  # Seçilen öğenin değerlerini al
-                    messagebox.showinfo(
-                        "Book Selected",
-                        f"You selected:\n\nTitle: {item_values[0]}\nAuthor: {item_values[1]}\nGenre: {item_values[2]}"
-                    )
+                    selected_item = self.tree.focus()  # Seçilen öğenin ID'sini al
+                    item_values = self.tree.item(selected_item, "values")  # Seçilen öğenin değerlerini al
 
-                tree.bind("<<TreeviewSelect>>", on_item_select)
+                    # Kitap detaylarını göstermek için show_book_details metodunu çağır
+                    if item_values:  # Eğer geçerli bir seçim varsa
+                        self.show_book_details(item_values)
+
+                self.tree.bind("<<TreeviewSelect>>", on_item_select)
 
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred while searching: {e}")
+
 
 
     def load_notifications(self):

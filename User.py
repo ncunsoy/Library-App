@@ -1,7 +1,7 @@
 from datetime import date
 from typing import List
 from database.db_controller import *
-#from book import book
+import Book
 
 class User:
 
@@ -29,18 +29,26 @@ class User:
         self._comments = comments  
         self.db_controller = DatabaseController()
 
-    def reserve_book(self, book):
-        print(f"Reserving book: {book}")
-        # reserve hangi şartlarda yapılacak 1.durum olmayan kitabı ayırtmak(bu durumda availability kontrolü yapılıp false olduğu durumda reservation count 1 arttırılmalı (? birden fazla kişi reserve ederse önce hangisi alıcak/ sadece setreservationCount metodu var nasıl handle edicek bu durumu))
-        # 2.durum direk kitabı available ise alsın ve current borrower olarak atansın user.
+
+    def reserve_book(self, book_isbn: str):
+        # Fetch the book object from the database using the ISBN
+        book = self.db_controller.get_book_by_isbn(book_isbn)
+        if not book:
+            return "Error: Book not found."
+
+        print(f"Reserving book: {book.getTitle()}")
+        
         if book.getAvailability():
             book.setAvailability(False)
             book.setCurrentBorrower(self._user_id)
             self.db_controller.add_reservation(
                 self._user_id, book.getISBN(), date.today(), book.getDueDate(), "Active"
             )
+            return "Reserved"
         else:
             book.setReservationCount(self._user_id)
+            return "Added to Waitlist"
+
 
     
     def view_due_date(self,book) -> date:
@@ -73,7 +81,7 @@ class User:
         return book.getDescription
 
     def comment(self, book: str, comment: str):
-        self.comments.append(comment)
+        self._comments.append(comment)
         book.addComment(comment)
         self.db_controller.add_comment(self._user_id, book.getISBN(), comment)
 
@@ -130,12 +138,18 @@ class User:
         return [book for book in books]
     
     def get_comments(self) -> List[str]:
-        return self.comments
+        return self._comments
 
-    def add_comment(self, comment: str):
-        self.comments.append(comment)
-        self.db_controller.add_comment(self._user_id, self._current_book.getISBN(), comment)
-        #yukarıdaki comment ile farkı ne tam olarak 
+    def add_comment(self, book_isbn: str, comment: str):
+        # Fetch the book object from the database using the ISBN
+        book = self.db_controller.get_book_by_isbn(book_isbn)
+        if not book:
+            return "Error: Book not found."
+
+        self._comments.append(comment)
+        self.db_controller.add_comment(self._user_id, book.getISBN(), comment)
+        return "Comment Added"
+
     
     def getID(self) -> int:  
         return self.user_id 

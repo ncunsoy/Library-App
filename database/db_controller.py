@@ -241,6 +241,16 @@ class DatabaseController:
             return False
 
 
+    def get_book_by_isbn(self,book_isbn):
+        try:
+            query = """
+            SELECT * FROM Book WHERE ISBN = ?
+            """
+            self._cursor.execute(query, (book_isbn,))
+            return self._cursor.fetchall()
+        except sqlite3.Error as e:
+            print(f"Kitap getirme hatası: {e}")
+            return []
 
 
 
