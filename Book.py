@@ -38,7 +38,7 @@ class Book:
     
     def setDescription(self,description):
         #after add db controller,update this method
-        self.controller.update_book_description(self._description,description)
+        self.controller.update_book_description(self._ısbn,description)
 
     def addComments(self, user_id, comment_text):
         self.controller.add_comment(user_id,self._ısbn,comment_text)
