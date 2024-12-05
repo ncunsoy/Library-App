@@ -1,5 +1,6 @@
 from datetime import date
 from typing import List
+from database.db_controller import *
 #from book import book
 
 class User:
@@ -26,6 +27,7 @@ class User:
         self._current_notification = current_notification
         self._fine = fine
         self._comments = comments  
+        self.db_controller = DatabaseController()
 
     def reserve_book(self, book):
         print(f"Reserving book: {book}")
@@ -112,20 +114,20 @@ class User:
         # print(f"Searching books by genre: {genre}")
         # return []
         books = self.db_controller.search_books(genre=genre)
-        return [f"{book[1]} (ISBN: {book[0]})" for book in books]
+        return [book for book in books]
 
     def search_by_author(self, author: str) -> List[str]:
         # print(f"Searching books by author: {author}")
         # return []
         books = self.db_controller.search_books(author=author)
-        return [f"{book[1]} (ISBN: {book[0]})" for book in books]
-
+        return [book for book in books]
+    
 
     def search_by_title(self, title: str) -> List[str]:
         # print(f"Searching books by title: {title}")
         # return []
         books = self.db_controller.search_books(title=title)
-        return [f"{book[1]} (ISBN: {book[0]})" for book in books]
+        return [book for book in books]
     
     def get_comments(self) -> List[str]:
         return self.comments

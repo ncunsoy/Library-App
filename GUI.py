@@ -250,6 +250,7 @@ class LibraryApp:
         self.notification_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
 
+    
 
 
 
