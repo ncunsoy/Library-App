@@ -78,6 +78,24 @@ class DatabaseController:
             print(f"Şifre değiştirme hatası: {e}")
             self._conn.rollback()
             return False
+        
+
+    # view_dueDate method
+    def view_dueDate(self, user_id, book_isbn):
+        try:
+            query = """
+            SELECT b.Title,r.DueDate
+            FROM Reservation r, Book b, Users u
+            WHERE r.UserID = ?
+            AND r.BookISBN = ?
+            AND r.BookISBN = b.ISBN
+            AND r.UserID = u.UserID
+            """
+            self._cursor.execute(query, (user_id,book_isbn))
+            return self._cursor.fetchall()
+        except sqlite3.Error as e:
+            print(f"Teslim tarihi görüntüleme hatası: {e}")
+            return []
 
     
 
@@ -152,21 +170,6 @@ class DatabaseController:
             self._conn.rollback()
             return False
         
-    # view_dueDate method
-    def view_dueDate(self, user_id):
-        try:
-            query = """
-            SELECT b.Title,r.DueDate
-            FROM Reservation r, Book b, Users u
-            WHERE r.UserID = ?
-            AND r.BookISBN = b.ISBN
-            AND r.UserID = u.UserID
-            """
-            self._cursor.execute(query, (user_id,))
-            return self._cursor.fetchall()
-        except sqlite3.Error as e:
-            print(f"Teslim tarihi görüntüleme hatası: {e}")
-            return []
         
     # view_user_reservations method
     # Kullanıcı tüm rezervasyonlarını görecek. past_reservations için status = "Finished" olacak. Overdue olanlar için ise DueDate'i geçmiş olanlar olacak

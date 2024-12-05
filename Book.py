@@ -1,5 +1,6 @@
 from typing import Any
 from database.db_controller import *
+import Comment
 
 class Book:
     # Controller oluşturma
@@ -28,7 +29,9 @@ class Book:
         self._currentBorrowerID=currentBorrowerID
 
     def setAvailability(self,availability):
-        self.controller.update_book_availability(self._ısbn,availability)
+        is_updated=self.controller.update_book_availability(self._ısbn,availability),
+        if is_updated:
+            self._availability=availability
 
     def getAvailability(self):
         return self._availability
@@ -38,15 +41,26 @@ class Book:
     
     def setDescription(self,description):
         #after add db controller,update this method
-        self.controller.update_book_description(self._description,description)
+        is_set=self.controller.update_book_description(self._description,description)
+        if is_set:
+            self._description=description
 
     def addComments(self, user_id, comment_text):
-        self.controller.add_comment(user_id,self._ısbn,comment_text)
+        is_added=self.controller.add_comment(user_id,self._ısbn,comment_text)
+        if is_added:
+            self._comments.append(Comment(user_id,comment_text))
         
     def getComments(self):
+        comments = self.controller._cursor.execute(
+        "SELECT CommentText FROM Comment WHERE BookISBN = ?", (self._ısbn,)
+        ).fetchall()
+        self._comments = [c[0] for c in comments]
         return self._comments
     
     def getReservationCount(self):
+        self._reservationCount = self.controller._cursor.execute(
+        "SELECT COUNT(*) FROM Reservation WHERE BookISBN = ?", (self._ısbn,)
+        ).fetchone()[0]
         return self._reservationCount
     
     def setReservationCount(self,user_id):
@@ -57,9 +71,15 @@ class Book:
     
     def setDueDate(self,user_id,dueDate):
         ###
-        self.controller.extend_due_date(user_id,self._ısbn,dueDate)
+        is_set=self.controller.extend_due_date(user_id,self._ısbn,dueDate)
+        if is_set:
+            self._dueDate=dueDate
     
     def getCurrentBorrower(self):
+        result = self.controller._cursor.execute(
+        "SELECT UserID FROM Reservation WHERE BookISBN = ? AND Status = 'Active'", (self._ısbn,)
+        ).fetchone()
+        self._currentBorrowerID = result[0] if result else None
         return self._currentBorrowerID
     
     def setCurrentBorrower(self,user_id):

@@ -1,5 +1,8 @@
-from db_controller import DatabaseController
+from database.db_controller import DatabaseController
+import datetime as dt
+import Book
 
+overdue_fine=5
 
 class StaffMember:
     #constructor
@@ -26,6 +29,19 @@ class StaffMember:
         return self.db.remove_book(isbn)
 
     def updateBookAvailability(self, isbn, availability):
+        if availability=="Finished":
+            # Kitabın geç teslim edilip edilmediğini kontrol ederek ona göre ceza uygular 
+            book= Book(isbn)
+            current_userID=self.db.get_current_borrower(isbn)
+            due_date=self.db.view_dueDate(current_userID,isbn)[1]
+            lateness=(dt.today()-due_date).days
+            if lateness>0:
+                self.chargeForOverdueBook(current_userID,overdue_fine*lateness)
+
+             # Kullanıcılara bildirim gönderir
+            users=self.db.get_users_with_reserved_book(isbn)    
+            for user in users:
+                self.sendNotification(user, "Rezerve ettiğiniz kitap artık mevcut.")
         return self.db.update_book_availability(isbn, availability)
 
     def registerUser(self, name, password, favourite_genre):
@@ -38,7 +54,7 @@ class StaffMember:
         return self.db.createBookReport(isbn)
 
     def createUserReport(self, isbn):
-        return self.db.createBookReport(isbn)
+        return self.db.createUserReport(isbn)
 
     def chargeForOverdueBook(self, user_id, charge_amount):
         return self.db.update_fine(user_id, charge_amount)
