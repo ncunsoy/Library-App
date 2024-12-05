@@ -40,7 +40,9 @@ class User:
                 self._user_id, book.getISBN(), date.today(), book.getDueDate(), "Active"
             )
         else:
-            book.setReservationCount(self._user_id)
+            self.db_controller.add_reservation(
+                self._user_id, book.getISBN(), date.today(), book.getDueDate(), "Pending"
+            )
 
     
     def view_due_date(self,book) -> date:
@@ -128,6 +130,10 @@ class User:
         # return []
         books = self.db_controller.search_books(title=title)
         return [book for book in books]
+    
+    def get_current_notification(self) -> List[str]:
+        self._current_notification = self.db_controller._conn.execute("SELECT * FROM Notification WHERE UserID = ?", (self._user_id,)).fetchall()
+        return self._current_notification
     
     def get_comments(self) -> List[str]:
         return self.comments

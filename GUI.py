@@ -10,7 +10,7 @@ class LibraryApp:
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Library Management System")
-        self.root.geometry("800x600")
+        self.root.geometry("900x600")
         self.current_user = None
         self.controller = DatabaseController(db_name='LibraryApp.db')  # DatabaseController örneği oluşturma
         self.initialize_login_screen()
@@ -21,11 +21,11 @@ class LibraryApp:
         self.clear_screen()
         # Arka plan görselini yükleme
         background_image = Image.open("library_background.png")  # Resim dosyasının yolu
-        background_image = background_image.resize((800, 600), Image.LANCZOS)  # Yeni ölçeklendirme yöntemi
+        background_image = background_image.resize((900, 600), Image.LANCZOS)  # Yeni ölçeklendirme yöntemi
         self.bg_image = ImageTk.PhotoImage(background_image)
         
         # Canvas widget ile arka plan görselini yerleştirme
-        canvas = tk.Canvas(self.root, width=800, height=600)
+        canvas = tk.Canvas(self.root, width=900, height=600)
         canvas.create_image(0, 0, anchor=tk.NW, image=self.bg_image)
         canvas.pack(fill=tk.BOTH, expand=True)
         
@@ -97,16 +97,16 @@ class LibraryApp:
 
         # Arama Çubuğu Çerçevesi
         search_frame = tk.Frame(self.root)
-        search_frame.pack(pady=10, anchor="w", padx=20)
+        search_frame.pack(pady=10, padx=20, anchor="nw")
 
         # Title
         tk.Label(search_frame, text="Title:", font=("Arial", 12)).grid(row=0, column=0, padx=(0, 5), pady=5, sticky=tk.W)
-        title_entry = tk.Entry(search_frame, font=("Arial", 12), width=30)
+        title_entry = tk.Entry(search_frame, font=("Arial", 12), width=20)
         title_entry.grid(row=0, column=1, padx=5, pady=5)
 
         # Author
         tk.Label(search_frame, text="Author:", font=("Arial", 12)).grid(row=1, column=0, padx=(0, 5), pady=5, sticky=tk.W)
-        author_entry = tk.Entry(search_frame, font=("Arial", 12), width=30)
+        author_entry = tk.Entry(search_frame, font=("Arial", 12), width=20)
         author_entry.grid(row=1, column=1, padx=5, pady=5)
 
         # Genre
@@ -125,73 +125,134 @@ class LibraryApp:
                 ).grid(row=0, column=3, rowspan=2, padx=(10, 0), pady=5)
 
         # Sonuç Çerçevesi
-        self.results_frame = tk.Frame(self.root)
-        self.results_frame.pack(fill=tk.BOTH, expand=True, pady=(10, 0), padx=20)
+        self.results_frame = tk.Frame(self.root, width=600)  # ÖNEMLİ: `self.results_frame` tanımlanıyor
+        self.results_frame.pack(side=tk.LEFT, padx=(20, 10), pady=(10, 0), fill=tk.Y)
         tk.Label(self.results_frame, text="Search Results:", font=("Arial", 14, "bold"), anchor="w").pack(anchor="w")
 
+        # Treeview
+        columns = ("Title", "Author", "Genre")
+        self.tree = ttk.Treeview(self.results_frame, columns=columns, show="headings", height=15)
+        self.tree.heading("Title", text="Title")
+        self.tree.heading("Author", text="Author")
+        self.tree.heading("Genre", text="Genre")
+        self.tree.pack(fill=tk.BOTH, expand=True, pady=5)
+
+        # Scrollbar ekleme
+        scrollbar = ttk.Scrollbar(self.results_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscroll=scrollbar.set)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
         # Bildirim Paneli
-        notification_frame = tk.Frame(self.root, bg="red", width=200, height=400)
-        notification_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=(0, 10))
-        tk.Label(notification_frame, text="Notifications", font=("Arial", 14, "bold"), bg="red", fg="white").pack(pady=10)
-        notification_list = tk.Listbox(notification_frame, font=("Arial", 12), bg="white", height=20)
-        notification_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
-        
+        self.notifications_frame = tk.Frame(self.root, bg="red", width=200)
+        self.notifications_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=10, pady=10)
+        tk.Label(self.notifications_frame, text="Notifications", font=("Arial", 14, "bold"), bg="red", fg="white").pack(pady=10)
+        self.notification_list = tk.Listbox(self.notifications_frame, font=("Arial", 12), bg="white", height=20, width=25)
+        self.notification_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
         # Bildirimleri yükle
-        notifications = self.fetch_notifications()
+        notifications = self.load_notifications()
         for note in notifications:
-            notification_list.insert(tk.END, note)
+            self.notification_list.insert(tk.END, note)
 
 
 
-
-
-    def initialize_staff_dashboard(self):
-        """Set up the user dashboard with a search bar."""
+    def initialize_user_dashboard(self):
+        """Set up the user dashboard with a search bar and notification panel."""
         self.clear_screen()
+
 
         # Başlık
         tk.Label(self.root, text="Library Management System", font=("Arial", 18, "bold")).pack(pady=10)
-
-        # Kullanıcı Hoş Geldiniz Mesajı
         tk.Label(self.root, text=f"Welcome, {self.current_user._name}!", font=("Arial", 14)).pack(pady=5)
 
+    
         # Arama Çubuğu Çerçevesi
-        search_frame = tk.Frame(self.root, pady=20)
-        search_frame.pack(pady=20)
+        search_frame = tk.Frame(self.root)
+        search_frame.pack(pady=10, padx=20, anchor="nw")
 
-        # Title Giriş Alanı
-        tk.Label(search_frame, text="Title:", font=("Arial", 12)).grid(row=0, column=0, padx=(10, 2), pady=5, sticky=tk.E)
-        title_entry = tk.Entry(search_frame, font=("Arial", 12), width=50)
-        title_entry.grid(row=0, column=1, padx=5, pady=5, columnspan=3, sticky=tk.W)
+        # Title
+        tk.Label(search_frame, text="Title:", font=("Arial", 12)).grid(row=0, column=0, padx=(0, 5), pady=5, sticky=tk.W)
+        title_entry = tk.Entry(search_frame, font=("Arial", 12), width=20)
+        title_entry.grid(row=0, column=1, padx=5, pady=5)
 
-        # Author ve Genre Giriş Alanları (aynı satırda)
-        tk.Label(search_frame, text="Author:", font=("Arial", 12)).grid(row=1, column=0, padx=(10, 2), pady=5, sticky=tk.E)
+        # Author
+        tk.Label(search_frame, text="Author:", font=("Arial", 12)).grid(row=1, column=0, padx=(0, 5), pady=5, sticky=tk.W)
         author_entry = tk.Entry(search_frame, font=("Arial", 12), width=20)
         author_entry.grid(row=1, column=1, padx=5, pady=5)
 
-        tk.Label(search_frame, text="Genre:", font=("Arial", 12)).grid(row=1, column=2, padx=(10, 2), pady=5, sticky=tk.E)
-
-        # Veritabanından türleri çekiyoruz
-        genres = self.fetch_genres_from_db()
-        genre_combobox = ttk.Combobox(search_frame, font=("Arial", 12), state="readonly", width=18)
-        genre_combobox['values'] = genres if genres else ["No Genres Available"]  # Türler yoksa varsayılan bir mesaj
+        # Genre
+        tk.Label(search_frame, text="Genre:", font=("Arial", 12)).grid(row=1, column=2, padx=(10, 5), pady=5, sticky=tk.E)
+        genre_combobox = ttk.Combobox(search_frame, font=("Arial", 12), state="readonly", width=15)
+        genres = [""] + self.fetch_genres_from_db()  # Boş değer ekleniyor
+        genre_combobox['values'] = genres
         genre_combobox.set("Select Genre")
         genre_combobox.grid(row=1, column=3, padx=5, pady=5)
 
-        # Arama Simgesi (Büyüteç)
+        # Search Icon
         search_icon = Image.open("search_icon.png")  # Simge dosyasını yükleme
         search_icon = search_icon.resize((25, 25), Image.LANCZOS)  # Simgeyi yeniden boyutlandırma
         search_image = ImageTk.PhotoImage(search_icon)
 
-        tk.Button(search_frame, image=search_image, 
-                command=lambda: self.search_books(
-                    title=title_entry.get().strip() if title_entry.get().strip() else None,
-                    author=author_entry.get().strip() if author_entry.get().strip() else None,
-                    genre=genre_combobox.get() if genre_combobox.get() != "Select Genre" else None),
-                bg="white", bd=0).grid(row=1, column=4, padx=(15, 10), pady=5, sticky=tk.W)
+        search_button = tk.Button(
+            search_frame,
+            image=search_image,
+            command=lambda: self.update_search_results(
+                title=title_entry.get().strip(),
+                author=author_entry.get().strip(),
+                genre=genre_combobox.get() if genre_combobox.get() not in ["", "Select Genre"] else None
+            ),
+            bg="white",
+            bd=0
+        )
+        search_button.grid(row=0, column=3, rowspan=1, padx=(10, 0), pady=5)
+        self.search_icon = search_image  # Simge referansı korunuyor
 
-        # Simge referansını saklamak için bir değişkene atayın
-        self.search_icon = search_image
+        # Sonuç Çerçevesi
+        self.results_frame = tk.Frame(self.root, width=600)  # ÖNEMLİ: `self.results_frame` tanımlanıyor
+        self.results_frame.pack(side=tk.LEFT, padx=(20, 10), pady=(10, 0), fill=tk.Y)
+        tk.Label(self.results_frame, text="Search Results:", font=("Arial", 14, "bold"), anchor="w").pack(anchor="w")
+
+        # Treeview
+        columns = ("Title", "Author", "Genre")
+        self.tree = ttk.Treeview(self.results_frame, columns=columns, show="headings", height=15)
+        self.tree.heading("Title", text="Title")
+        self.tree.heading("Author", text="Author")
+        self.tree.heading("Genre", text="Genre")
+        self.tree.pack(fill=tk.BOTH, expand=True, pady=5)
+
+        # Scrollbar ekleme
+        scrollbar = ttk.Scrollbar(self.results_frame, orient="vertical", command=self.tree.yview)
+        self.tree.configure(yscroll=scrollbar.set)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Bildirim Paneli
+        self.notification_frame = tk.Frame(self.root, bg="red", width=200, height=600)  # Genişlik ve yükseklik sabitlendi
+        self.notification_frame.pack(side=tk.RIGHT, fill=tk.Y, padx=10, pady=10)
+        self.notification_frame.pack_propagate(False)  # İçeriklere göre yeniden boyutlanmayı engeller
+
+        # Başlık
+        tk.Label(
+            self.notification_frame,
+            text="Notifications",
+            font=("Arial", 14, "bold"),
+            bg="red",
+            fg="white"
+        ).pack(pady=10)
+
+        # Bildirim Listesi
+        self.notification_list = tk.Listbox(
+            self.notification_frame,
+            font=("Arial", 12),
+            bg="white",
+            height=25,  # Listbox yüksekliği artırıldı
+            width=30    # Listbox genişliği sabitlendi
+        )
+        self.notification_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
+
+
+
+
+
 
 
     
@@ -251,30 +312,40 @@ class LibraryApp:
         tree.configure(yscroll=scrollbar.set)
         scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
 
-        results = set()
+        results = None
 
         # Kullanıcı sınıfından kitapları ara
         try:
             if title:
-                results.update(self.current_user.search_by_title(title))
-            if author:
-                results.update(self.current_user.search_by_author(author))
-            if genre:
-                results.update(self.current_user.search_by_genre(genre))
+                title_results = set(self.current_user.search_by_title(title))
+                results = title_results if results is None else results.intersection(title_results)
 
+            if author:
+                author_results = set(self.current_user.search_by_author(author))
+                results = author_results if results is None else results.intersection(author_results)
+
+            if genre:
+                genre_results = set(self.current_user.search_by_genre(genre))
+                results = genre_results if results is None else results.intersection(genre_results)
+
+
+            
             # Sonuçları ekrana yazdır
             if not results:
                 tk.Label(self.results_frame, text="No books found.", font=("Arial", 12), bg="white").pack(anchor="w", pady=5)
             else:
                 for book in results:
-                    # book formatı: (Title, Author, Genre)
-                    tree.insert("", "end", values=book)
+                    # book: (isbn, title, authors, description, genre, availability)
+                    tree.insert("", "end", values=(book[1], book[2], book[4]))
 
                 # Seçim olayını bağlama
                 def on_item_select(event):
                     selected_item = tree.focus()  # Seçilen öğenin ID'sini al
                     item_values = tree.item(selected_item, "values")  # Seçilen öğenin değerlerini al
-                    messagebox.showinfo("Book Selected", f"You selected:\n\nTitle: {item_values[0]}\nAuthor: {item_values[1]}\nGenre: {item_values[2]}")
+                    messagebox.showinfo(
+                        "Book Selected",
+                        f"You selected:\n\nTitle: {item_values[0]}\nAuthor: {item_values[1]}\nGenre: {item_values[2]}"
+                    )
 
                 tree.bind("<<TreeviewSelect>>", on_item_select)
 
@@ -282,24 +353,29 @@ class LibraryApp:
             messagebox.showerror("Error", f"An error occurred while searching: {e}")
 
 
+    def load_notifications(self):
+        """Kullanıcının bildirimlerini güncellemek için kullanılan fonksiyon."""
+        # Bildirim çerçevesini temizle
+        for widget in self.notification_frame.winfo_children():  # Doğru isimlendirme
+            widget.destroy()
 
+        # Kullanıcının bildirimlerini al
+        notifications_list = self.current_user.get_current_notification()
 
-    def load_notifications(self, notifications_list):
-        """Bildirimleri yükle."""
-        notifications_list.delete(0, tk.END)
-        if isinstance(self.current_user, User):
-            notifications = self.controller.view_notifications(self.current_user._user_id)
-            for notification in notifications:
-                notifications_list.insert(tk.END, notification[0])
+        # Bildirimleri ekle
+        if not notifications_list:
+            tk.Label(self.notification_frame, text="No notifications.", font=("Arial", 12), bg="white").pack(anchor="w", pady=5)
         else:
-            notifications_list.insert(tk.END, "No notifications available.")
+            for notification in notifications_list:
+                tk.Label(self.notification_frame, text=notification, font=("Arial", 12), bg="white").pack(anchor="w", pady=2)
+
+
 
 
     def clear_screen(self):
-        """Clear all widgets from the current screen."""
+        # Clear all widgets from the current screen
         for widget in self.root.winfo_children():
             widget.destroy()
-
 
 if __name__ == "__main__":
     app = LibraryApp()
