@@ -1,7 +1,6 @@
 from datetime import date
 from typing import List
 #from book import book
-from database.db_controller import *
 
 class User:
 
@@ -26,8 +25,7 @@ class User:
         self._past_reserved_books = past_reserved_books
         self._current_notification = current_notification
         self._fine = fine
-        self._comments = comments 
-        self.db_controller = DatabaseController() 
+        self._comments = comments  
 
     def reserve_book(self, book):
         print(f"Reserving book: {book}")
@@ -40,9 +38,7 @@ class User:
                 self._user_id, book.getISBN(), date.today(), book.getDueDate(), "Active"
             )
         else:
-            self.db_controller.add_reservation(
-                self._user_id, book.getISBN(), date.today(), book.getDueDate(), "Pending"
-            )
+            book.setReservationCount(self._user_id)
 
     
     def view_due_date(self,book) -> date:
@@ -107,7 +103,7 @@ class User:
         self.db_controller.set_favorite_genre(self._user_id, genre)
         self._favourite_genre = genre
 
-    def extend_reservation_duration(self,book, new_date: date):
+    def extend_reservation_duration(self,book,new_date: date):
         print(f"Extending reservation duration to {new_date}")
         # burda bir currentbook parametre olarak verilip onun duedate'i baştan set edilmesi gerekmiyor mu
         self.db_controller.extend_due_date(self._user_id, book.getISBN(), new_date)
@@ -116,30 +112,27 @@ class User:
         # print(f"Searching books by genre: {genre}")
         # return []
         books = self.db_controller.search_books(genre=genre)
-        return [book for book in books]
+        return [f"{book[1]} (ISBN: {book[0]})" for book in books]
 
     def search_by_author(self, author: str) -> List[str]:
         # print(f"Searching books by author: {author}")
         # return []
         books = self.db_controller.search_books(author=author)
-        return [book for book in books]
+        return [f"{book[1]} (ISBN: {book[0]})" for book in books]
 
 
     def search_by_title(self, title: str) -> List[str]:
         # print(f"Searching books by title: {title}")
         # return []
         books = self.db_controller.search_books(title=title)
-        return [book for book in books]
-    
-    def get_current_notification(self) -> List[str]:
-        self._current_notification = self.db_controller._conn.execute("SELECT * FROM Notification WHERE UserID = ?", (self._user_id,)).fetchall()
-        return self._current_notification
+        return [f"{book[1]} (ISBN: {book[0]})" for book in books]
     
     def get_comments(self) -> List[str]:
         return self.comments
 
     def add_comment(self, comment: str):
         self.comments.append(comment)
+        self.db_controller.add_comment(self._user_id, self._current_book.getISBN(), comment)
         #yukarıdaki comment ile farkı ne tam olarak 
     
     def getID(self) -> int:  
