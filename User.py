@@ -1,9 +1,9 @@
 from datetime import date
 from typing import List
-#from book import book
-
+from database.db_controller import DatabaseController
+from Book import *
 class User:
-
+    dbCont = DatabaseController()
     _name= None
     _user_id = 0
     _password = None
@@ -27,76 +27,65 @@ class User:
         self._fine = fine
         self._comments = comments  
 
-    def reserve_book(self, book):
-        print(f"Reserving book: {book}")
-        # reserve hangi şartlarda yapılacak 1.durum olmayan kitabı ayırtmak(bu durumda availability kontrolü yapılıp false olduğu durumda reservation count 1 arttırılmalı (? birden fazla kişi reserve ederse önce hangisi alıcak/ sadece setreservationCount metodu var nasıl handle edicek bu durumu))
-        # 2.durum direk kitabı available ise alsın ve current borrower olarak atansın user.
-    
-    def view_due_date(self) -> date:
-        print("Returning due date for the current book")
-        return date.today()
-        # burda currentbook parametre olarak alınmalı ve onun duedatei dönülmeli
+    def reserve_book(self, book_isbn,due_date):
+        self.dbCont.add_reservation(self._user_id,book_isbn,reservation_date=date.today,due_date)
+        #status nasıl olucak tam olarak
+    def view_due_date(self) :
+        return self.dbCont.view_dueDate(self.user_id)
+        #
 
     def view_past_reservation(self) -> List[str]:
-        return self.past_reserved_books
-        
+        return self.dbCont.view_reservations(self._user_id)
+        #db'de past reservations için status finished olucak yazıyor, ekstra bişey eklememe gerek var mı 
     def view_overdue(self) -> List[str]:
-        overdueList =[overDueBook for overDueBook in self._past_reserved_books if overDueBook.DueDate < date.today]
+        overdueList =[overDueBook for overDueBook in self.view_due_date if overDueBook < date.today]
         return overdueList
-     
+        # bu method tam olarak nasıl olmalı 
     def view_fine(self) -> float:
         return self.fine
-
-    def view_description(self, book) -> str:
+        #
+    def view_description(self, book:Book) -> str:
         return book.getDescription
-
-    def comment(self, book: str, comment: str):
-        self.comments.append(comment)
-        book.addComment(comment)
+        # book u import da ettim ama getDescription methodunu göremiyor
 
     def view_recommendations(self) -> List[str]:
-        print("Returning book recommendations")
-        return []
-
-    def make_reading_list(self, book: str):
-        print(f"Adding {book} to reading list")
-        self.reading_list.append(book)
+        return self.dbCont.get_recommendations(self._favourite_genre)
+        #
+    def make_reading_list(self, book_isbn):
+        self.dbCont.make_reading_list(self._user_id,book_isbn)
+        #self.reading_list.append(book)
 
     def change_password(self, new_password: str):
-        print("Changing password")
-        self.password = new_password
-
+        self.dbCont.change_name(type= User,user_id=self._user_id,new_password=new_password)
+        #self._password=new_password demeye gerek var mı yoksa method hallediyor mu kendisi databasede
     def change_user_name(self, new_name: str):
-        print("Changing username")
-        self.name = new_name
-
+        self.dbCont.change_name(type= User,user_id=self._user_id,new_name=new_name)
+        #self._name=new_name
     def set_favourite_genre(self, genre: str):
-        self.favourite_genre = genre
-
-    def extend_reservation_duration(self, new_date: date):
-        print(f"Extending reservation duration to {new_date}")
-        # burda bir currentbook parametre olarak verilip onun duedate'i baştan set edilmesi gerekmiyor mu
+        self.dbCont.set_favorite_genre(self._user_id, genre=genre)
+        #self.favourite_genre = genre
+        
+    def extend_reservation_duration(self, book_isbn, new_date):
+        self.dbCont.extend_due_date(self._user_id,book_isbn=book_isbn,new_due_date=new_date)
 
     def search_by_genre(self, genre: str) -> List[str]:
-        print(f"Searching books by genre: {genre}")
-        return []
-
+        return self.dbCont.search_books(genre=genre)
+        #
     def search_by_author(self, author: str) -> List[str]:
-        print(f"Searching books by author: {author}")
-        return []
-
+        return self.dbCont.search_books(author=author)
+        #
     def search_by_title(self, title: str) -> List[str]:
-        print(f"Searching books by title: {title}")
-        return []
-
+        return self.dbCont.search_books(title=title)
+        #
     def get_comments(self) -> List[str]:
-        return self.comments
+        return self._comments
 
-    def add_comment(self, comment: str):
-        self.comments.append(comment)
-        #yukarıdaki comment ile farkı ne tam olarak 
-    
+    def add_comment(self, comment: str, book_isbn):
+        self.dbCont.add_comment(self._user_id,book_isbn,comment) 
+        # book_isbn ekledim parametre olarak
+        # userın içindeki comment listine de bu comment i  eklemem gerekiyor mu
     def getID(self) -> int:  
         return self.user_id 
+        #
     
-    
+#parametre olarak book_isbn aldım genel olarak çünkü get isbn methodu olmadığı için görmüyor
