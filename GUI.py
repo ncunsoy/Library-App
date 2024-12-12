@@ -7,6 +7,7 @@ from StaffMember import StaffMember
 from database.db_controller import *
 
 class LibraryApp:
+    
     def __init__(self):
         self.root = tk.Tk()
         self.root.title("Library Management System")
@@ -391,9 +392,49 @@ class LibraryApp:
         tk.Label(profile_window, text=f"Username: {self.current_user._name}", font=("Arial", 12)).pack(pady=5)
         tk.Label(profile_window, text=f"User ID: {self.current_user._user_id}", font=("Arial", 12)).pack(pady=5)
         tk.Label(profile_window, text=f"Favourite Genre: {self.current_user._favourite_genre}", font=("Arial", 12)).pack(pady=5)
+        tk.Label(profile_window, text=f"Fines: {self.current_user._fine}", font=("Arial", 12)).pack(pady=5)
+
+        tk.Label(profile_window, text="Change Username:", font=("Arial", 12)).pack(pady=5)
+        username_entry = tk.Entry(profile_window, font=("Arial", 12))
+        username_entry.pack(pady=5)
+        username_entry.insert(0, self.current_user._name)  # Pre-fill with current username
+
+        # Add input field for changing password
+        tk.Label(profile_window, text="Change Password:", font=("Arial", 12)).pack(pady=5)
+        password_entry = tk.Entry(profile_window, font=("Arial", 12), show="*")
+        password_entry.pack(pady=5)
+
+        tk.Label(profile_window, text="Edit Favourite Genre:", font=("Arial", 12)).pack(pady=5)
+        genre_entry = tk.Entry(profile_window, font=("Arial", 12))
+        genre_entry.pack(pady=5)
+        genre_entry.insert(0, self.current_user._favourite_genre)  # Pre-fill with current genre
+
+        # Save button
+        def save_changes():
+            new_name = username_entry.get()
+            new_password = password_entry.get()
+            new_genre = genre_entry.get()
+
+            if new_name.strip():
+                self.current_user._name = new_name
+            if new_genre.strip():
+                self.current_user._favourite_genre = new_genre
+            if new_password.strip():
+                self.current_user._password = new_password
+                
+            tk.messagebox.showinfo("Success", "Profile updated successfully!")
+            profile_window.destroy()
+
+        tk.Button(profile_window, text="Save Changes", font=("Arial", 12), command=save_changes).pack(pady=10)
+
+        # Cancel button
+        def cancel_changes():
+            profile_window.destroy()
+
+        tk.Button(profile_window, text="Cancel", font=("Arial", 12), command=cancel_changes).pack(pady=5)
 
 
-    def show_book_details(self, item_values, book_isbn):
+    def show_book_details(self, item_values):
         """Show the selected book's details in a new window with separate frames for details and comments."""
         # Create a new window for book details
         details_window = tk.Toplevel(self.root)
@@ -404,10 +445,6 @@ class LibraryApp:
         details_frame = tk.Frame(details_window, borderwidth=2, relief="groove", padx=10, pady=10)
         details_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
 
-        # Fetch the current availability from the database
-        query = "SELECT Availability FROM Book WHERE ISBN = ?;"
-        availability = self.controller._cursor.execute(query, (book_isbn,)).fetchone()[0]
-
         # Book Details
         tk.Label(details_frame, text=f"Title: {item_values[0]}", font=("Arial", 12)).pack(anchor="w", pady=5)
         tk.Label(details_frame, text=f"Author: {item_values[1]}", font=("Arial", 12)).pack(anchor="w", pady=5)
@@ -415,11 +452,9 @@ class LibraryApp:
 
         # Placeholder description and availability
         description = "A detailed description of the book."  # Replace with real description from the database
-        availability = "Available" if availability == True else "Reserved"
-        availability_label = tk.Label(details_frame, text=f"Availability: {availability}", font=("Arial", 12))
+        availability = "Available"  # Replace with actual availability from the database
         tk.Label(details_frame, text=f"Description: {description}", font=("Arial", 12), wraplength=400, justify="left").pack(anchor="w", pady=5)
-        availability_label.pack(anchor="w", pady=5)
-
+        tk.Label(details_frame, text=f"Availability: {availability}", font=("Arial", 12)).pack(anchor="w", pady=5)
 
         # Frame for Comments
         comment_frame = tk.Frame(details_window, borderwidth=2, relief="groove", padx=10, pady=10)
@@ -437,13 +472,23 @@ class LibraryApp:
         comment_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         comment_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
+        # Load Comment 
+        def load_comments():
+            comment_list.delete(0, tk.END)  # Önce listeyi temizle
+            comments = self.current_user.get_comments()
+            for comment in comments:
+                comment_list.insert(tk.END, comment)
+
         # Add Comment Button
         def add_comment():
+            
             comment = comment_entry.get().strip()
             if comment:
                 result = self.current_user.add_comment(item_values[0], comment)  # Pass the ISBN and comment
                 if result == "Comment Added":
+                    
                     comment_list.insert(tk.END, comment)
+                    comment_entry.delete(0, tk.END)
                     messagebox.showinfo("Comment Added", "Your comment has been added!")
                 else:
                     messagebox.showerror("Error", result)
@@ -460,10 +505,11 @@ class LibraryApp:
             fg="white"
         ).pack(anchor="w", pady=10)
 
+        load_comments()
+
         # Reserve Book Button
         def reserve_book():
-            print([book_isbn])
-            result = self.current_user.reserve_book(book_isbn)  # Pass the ISBN
+            result = self.current_user.reserve_book(item_values[0])  # Pass the ISBN
             if result == "Reserved":
                 messagebox.showinfo("Success", "The book has been successfully reserved.")
             elif result == "Added to Waitlist":
@@ -471,9 +517,6 @@ class LibraryApp:
             else:
                 messagebox.showerror("Error", result)
 
-            # Refresh availability dynamically
-            updated_availability = self.controller._cursor.execute(query, (book_isbn,)).fetchone()[0]
-            availability_label.config(text=f"Availability: {'Available' if updated_availability == True else 'Reserved'}")
 
         tk.Button(
             details_frame,
@@ -536,13 +579,11 @@ class LibraryApp:
             widget.destroy()
 
         # Treeview widget'ı oluştur ve `self.tree` olarak kaydet
-        columns = ("Title", "Author", "Genre")  # ISBN kaldırıldı
+        columns = ("Title", "Author", "Genre")
         self.tree = ttk.Treeview(self.results_frame, columns=columns, show="headings", height=10)
         self.tree.heading("Title", text="Title")
         self.tree.heading("Author", text="Author")
         self.tree.heading("Genre", text="Genre")
-
-
         self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
 
         # Scrollbar ekleme ve Treeview'e bağlama
@@ -572,17 +613,16 @@ class LibraryApp:
             else:
                 for book in results:
                     # book: (isbn, title, authors, description, genre, availability)
-                    self.tree.insert("", "end", values=(book[1], book[2], book[4]), tags=(book[0],))  # ISBN saklanıyor
+                    self.tree.insert("", "end", values=(book[1], book[2], book[4]))  # Kitap bilgilerini Treeview'e ekle
 
                 # Seçim olayını bağlama
                 def on_item_select(event):
                     selected_item = self.tree.focus()  # Seçilen öğenin ID'sini al
-                    item_values = self.tree.item(selected_item, "values")  # Seçilen öğenin görünen değerlerini al
-                    book_isbn = self.tree.item(selected_item, "tags")[0]  # ISBN'i tags'den alıyoruz
+                    item_values = self.tree.item(selected_item, "values")  # Seçilen öğenin değerlerini al
 
+                    # Kitap detaylarını göstermek için show_book_details metodunu çağır
                     if item_values:  # Eğer geçerli bir seçim varsa
-                        self.show_book_details(item_values, book_isbn)  # Detay penceresini açarken ISBN'i de geçiriyoruz
-
+                        self.show_book_details(item_values)
 
                 self.tree.bind("<<TreeviewSelect>>", on_item_select)
 
