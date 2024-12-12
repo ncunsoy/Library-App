@@ -187,12 +187,14 @@ class User:
         self._comments = self.controller._cursor.execute(
             "SELECT CommentText FROM Comment WHERE UserID = ?", (self._user_id,)
         ).fetchall()
+        #self.controller._conn.commit()
         return self._comments
 
     def add_comment(self, book_isbn: str, comment: str):
         # Fetch the book object from the database using the ISBN  
         self._comments.append(comment)
         self.controller.add_comment(self._user_id,book_isbn, comment)
+        self.controller._conn.commit()
         return "Comment Added"
 
     

@@ -391,46 +391,7 @@ class LibraryApp:
         tk.Label(profile_window, text=f"Username: {self.current_user._name}", font=("Arial", 12)).pack(pady=5)
         tk.Label(profile_window, text=f"User ID: {self.current_user._user_id}", font=("Arial", 12)).pack(pady=5)
         tk.Label(profile_window, text=f"Favourite Genre: {self.current_user._favourite_genre}", font=("Arial", 12)).pack(pady=5)
-
-        tk.Label(profile_window, text="Change Username:", font=("Arial", 12)).pack(pady=5)
-        username_entry = tk.Entry(profile_window, font=("Arial", 12))
-        username_entry.pack(pady=5)
-        username_entry.insert(0, self.current_user._name)  # Pre-fill with current username
-
-        # Add input field for changing password
-        tk.Label(profile_window, text="Change Password:", font=("Arial", 12)).pack(pady=5)
-        password_entry = tk.Entry(profile_window, font=("Arial", 12), show="*")
-        password_entry.pack(pady=5)
-
-        tk.Label(profile_window, text="Edit Favourite Genre:", font=("Arial", 12)).pack(pady=5)
-        genre_entry = tk.Entry(profile_window, font=("Arial", 12))
-        genre_entry.pack(pady=5)
-        genre_entry.insert(0, self.current_user._favourite_genre)  # Pre-fill with current genre
-
-        # Save button
-        def save_changes():
-            new_name = username_entry.get()
-            new_password = password_entry.get()
-            new_genre = genre_entry.get()
-
-            if new_name.strip():
-                self.current_user._name = new_name
-            if new_genre.strip():
-                self.current_user._favourite_genre = new_genre
-            if new_password.strip():
-                self.current_user._password = new_password
-                
-            tk.messagebox.showinfo("Success", "Profile updated successfully!")
-            profile_window.destroy()
-
-        tk.Button(profile_window, text="Save Changes", font=("Arial", 12), command=save_changes).pack(pady=10)
-
-        # Cancel button
-        def cancel_changes():
-            profile_window.destroy()
-
-        tk.Button(profile_window, text="Cancel", font=("Arial", 12), command=cancel_changes).pack(pady=5)
-
+        tk.Label(profile_window, text=f"Fines: {self.current_user._fine}", font=("Arial", 12)).pack(pady=5)
 
     def show_book_details(self, item_values, book_isbn):
         """Show the selected book's details in a new window with separate frames for details and comments."""
@@ -476,13 +437,23 @@ class LibraryApp:
         comment_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         comment_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
+        # Load Comment 
+        def load_comments():
+            #comment_list.delete(0, tk.END)  # Önce listeyi temizle
+            comments = self.current_user.get_comments(self.item_values[0])
+            for comment in comments:
+                comment_list.insert(tk.END, comment)
+
         # Add Comment Button
         def add_comment():
+            
             comment = comment_entry.get().strip()
             if comment:
                 result = self.current_user.add_comment(item_values[0], comment)  # Pass the ISBN and comment
                 if result == "Comment Added":
+                    
                     comment_list.insert(tk.END, comment)
+                    comment_entry.delete(0, tk.END)
                     messagebox.showinfo("Comment Added", "Your comment has been added!")
                 else:
                     messagebox.showerror("Error", result)
@@ -498,6 +469,8 @@ class LibraryApp:
             bg="blue",
             fg="white"
         ).pack(anchor="w", pady=10)
+
+        load_comments()
 
         # Reserve Book Button
         def reserve_book():
