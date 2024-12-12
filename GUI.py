@@ -405,7 +405,7 @@ class LibraryApp:
                     self.controller.set_favorite_genre(self.current_user.getID, new_genre)
                 if new_password.strip():
                     self.current_user._password = new_password
-                    self.controller.change_password(self.current_user.getID, new_password)
+                    self.controller.change_password(User, self.current_user.getID, new_password)
 
                 tk.messagebox.showinfo("Success", "Profile updated successfully!")
                 profile_window.destroy()
