@@ -26,7 +26,7 @@ class Book:
         self._comments=comments
         self._reservationCount=reservationCount
         self._dueDate=dueDate
-        self._currentBorrowerID=currentBorrowerID
+        self._currentBorrowerID=currentBorrowerID 
 
     def setAvailability(self,availability):
         is_updated=self.controller.update_book_availability(self._ısbn,availability),
