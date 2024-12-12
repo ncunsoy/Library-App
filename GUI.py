@@ -534,6 +534,7 @@ class LibraryApp:
             if comment:
                 result = self.current_user.add_comment(item_values[0], comment)  # Pass the ISBN and comment
                 if result == "Comment Added":
+                    comment_entry.delete(0, tk.END)
                     comment_list.insert(tk.END, comment)
                     messagebox.showinfo("Comment Added", "Your comment has been added!")
                 else:
@@ -551,7 +552,7 @@ class LibraryApp:
             fg="white"
         ).pack(anchor="w", pady=10)
 
-        load_comments()
+        #load_comments()
 
         # Reserve Book Button
         def reserve_book():
