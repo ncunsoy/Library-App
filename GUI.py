@@ -441,7 +441,7 @@ class LibraryApp:
                 report_users_id = users_id_entry.get()
                 self.controller.createUserReport(report_users_id)
                 tk.messagebox.showinfo("Success", "User report made successfully!")
-                tk.messagebox.showinfo("Success", StaffMember.createUserReport(report_users_id))
+                tk.messagebox.showinfo("User Report", self.current_user.createUserReport(report_users_id))
                 profile_window.destroy()
 
         def charge_amount():
@@ -483,6 +483,7 @@ class LibraryApp:
                 report_book_isbn = book_isbn.get()
                 self.controller.createBookReport(report_book_isbn)
                 tk.messagebox.showinfo("Success", "Book report made successfully!")
+                tk.messagebox.showinfo("Book Report", self.current_user.createBookReport(report_book_isbn))
                 profile_window.destroy()
  
             
