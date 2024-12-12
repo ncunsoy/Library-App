@@ -380,6 +380,7 @@ class LibraryApp:
         )
         self.notification_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
+    
 
     def open_profile_screen(self):
         """Kullanıcı profili için yeni bir ekran aç."""
@@ -389,6 +390,40 @@ class LibraryApp:
 
         tk.Label(profile_window, text="User Profile", font=("Arial", 16, "bold")).pack(pady=10)
         tk.Label(profile_window, text=f"Username: {self.current_user._name}", font=("Arial", 12)).pack(pady=5)
+
+        def open_commands_window():      
+        
+            commands_window = tk.Toplevel(profile_window)
+            commands_window.title("All Comments")
+            commands_window.geometry("300x300")  # Yeni pencere boyutu
+            tk.Label(commands_window, text="My All Commands", font=("Arial", 16, "bold")).pack(pady=10)
+            frame = tk.Frame(commands_window)
+            frame.pack(expand=True, fill=tk.BOTH)
+
+            
+        
+            text_widget = tk.Text(frame, wrap=tk.WORD, height=10, width=30)
+            text_widget.grid(row=0, column=0, padx=5, pady=5)
+            scrollbar = ttk.Scrollbar(frame, command=text_widget.yview)
+            scrollbar.grid(row=0, column=1, sticky="ns", padx=5, pady=5)  # Sağ tarafa hizalanır
+        
+            text_widget.config(yscrollcommand=scrollbar.set)
+
+            # Grid düzenlemesi için ortalama
+            frame.grid_rowconfigure(0, weight=1)
+            frame.grid_columnconfigure(0, weight=1)
+            
+            comments = self.current_user.get_comments()
+            just_comment= [item[0] for item in comments]
+
+             # Yorumları Text widget'a ekle
+            for comment in just_comment:
+                text_widget.insert(tk.END, f"- {comment}\n")
+        
+            # Scrollbar
+            scrollbar = ttk.Scrollbar(commands_window, command=text_widget.yview)
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            text_widget.config(yscrollcommand=scrollbar.set)
 
         # Save button
         def save_changes():
@@ -452,6 +487,7 @@ class LibraryApp:
             genre_entry.insert(0, self.current_user._favourite_genre)  # Pre-fill with current genre
 
             tk.Button(profile_window, text="Save Changes", font=("Arial", 12), command=save_changes).pack(pady=10)
+            tk.Button(profile_window, text="See Comments", font=("Arial", 12), command=open_commands_window).pack(pady=10)
 
         elif isinstance(self.current_user, StaffMember):
             tk.Label(profile_window, text="Username:", font=("Arial", 12)).pack(pady=5)
@@ -521,12 +557,8 @@ class LibraryApp:
         comment_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         comment_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        # Load Comment 
-        def load_comments():
-            comment_list.delete(0, tk.END)  # Önce listeyi temizle
-            comments = self.current_user.get_comments()
-            for comment in comments:
-                comment_list.insert(tk.END, comment)
+        
+
 
         # Add Comment Button
         def add_comment():
@@ -552,7 +584,7 @@ class LibraryApp:
             fg="white"
         ).pack(anchor="w", pady=10)
 
-        #load_comments()
+        
 
         # Reserve Book Button
         def reserve_book():
