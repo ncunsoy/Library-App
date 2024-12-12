@@ -385,10 +385,20 @@ class LibraryApp:
         """Kullanıcı profili için yeni bir ekran aç."""
         profile_window = tk.Toplevel(self.root)
         profile_window.title("User Profile")
-        profile_window.geometry("400x400")  # Yeni pencere boyutu
+        profile_window.geometry("800x400")  # Yeni pencere boyutu
 
-        tk.Label(profile_window, text="User Profile", font=("Arial", 16, "bold")).pack(pady=10)
+        if isinstance(self.current_user, User):
+            tk.Label(profile_window, text="User Profile", font=("Arial", 16, "bold")).pack(pady=10)
+            
+        if isinstance(self.current_user, StaffMember):
+            tk.Label(profile_window, text="Admin Panel", font=("Arial", 16, "bold")).pack(pady=10)
+
         tk.Label(profile_window, text=f"Username: {self.current_user._name}", font=("Arial", 12)).pack(pady=5)
+        user_frame = tk.Frame(profile_window)
+        user_frame.pack(side=tk.LEFT, padx=20, pady=10, fill=tk.BOTH, expand=True)
+
+        book_frame = tk.Frame(profile_window)
+        book_frame.pack(side=tk.RIGHT, padx=20, pady=10, fill=tk.BOTH, expand=True)
 
         # Save button
         def save_changes():
@@ -430,15 +440,20 @@ class LibraryApp:
             if isinstance(self.current_user, StaffMember):
                 added_book_name = book_name.get()
                 added_book_author = book_author.get()
+                added_book_description = book_description.get()
                 added_book_genre = book_genre.get()
                 added_book_availability = book_availability.get()
                 added_book_isbn = book_isbn.get()
-                self.controller.add_book(added_book_isbn,added_book_name,added_book_author,added_book_genre,added_book_availability)
+                self.controller.add_book(added_book_isbn,added_book_name,added_book_author,added_book_description,added_book_genre,added_book_availability)
+                tk.messagebox.showinfo("Success", "Book added successfully!")
+                profile_window.destroy()
 
         def remove_book():
             if isinstance(self.current_user, StaffMember):
                 removed_book_isbn = book_isbn.get()
                 self.controller.remove_book(removed_book_isbn)
+                tk.messagebox.showinfo("Success", "Book removed successfully!")
+                profile_window.destroy()
                 
             
         # Cancel button
@@ -447,77 +462,84 @@ class LibraryApp:
 
 
         if isinstance(self.current_user, User):
-            tk.Label(profile_window, text=f"User ID: {self.current_user._user_id}", font=("Arial", 12)).pack(pady=5)
-            tk.Label(profile_window, text=f"Favourite Genre: {self.current_user._favourite_genre}", font=("Arial", 12)).pack(pady=5)
-            tk.Label(profile_window, text="Change Username:", font=("Arial", 12)).pack(pady=5)
+            tk.Label(user_frame, text="Manage Users", font=("Arial", 14, "bold")).pack(pady=5)
+            tk.Label(user_frame, text=f"User ID: {self.current_user._user_id}", font=("Arial", 12)).pack(pady=5)
+            tk.Label(user_frame, text=f"Favourite Genre: {self.current_user._favourite_genre}", font=("Arial", 12)).pack(pady=5)
+            tk.Label(user_frame, text="Change Username:", font=("Arial", 12)).pack(pady=5)
 
             # Add input field for changing username
-            username_entry = tk.Entry(profile_window, font=("Arial", 12))
+            username_entry = tk.Entry(user_frame, font=("Arial", 12))
             username_entry.pack(pady=5)
             username_entry.insert(0, self.current_user._name)  # Pre-fill with current username
 
             # Add input field for changing password
-            tk.Label(profile_window, text="Change Password:", font=("Arial", 12)).pack(pady=5)
-            password_entry = tk.Entry(profile_window, font=("Arial", 12), show="*")
+            tk.Label(user_frame, text="Change Password:", font=("Arial", 12)).pack(pady=5)
+            password_entry = tk.Entry(user_frame, font=("Arial", 12), show="*")
             password_entry.pack(pady=5)
 
-            tk.Label(profile_window, text="Edit Favourite Genre:", font=("Arial", 12)).pack(pady=5)
-            genre_entry = tk.Entry(profile_window, font=("Arial", 12))
+            tk.Label(user_frame, text="Edit Favourite Genre:", font=("Arial", 12)).pack(pady=5)
+            genre_entry = tk.Entry(user_frame, font=("Arial", 12))
             genre_entry.pack(pady=5)
             genre_entry.insert(0, self.current_user._favourite_genre)  # Pre-fill with current genre
 
-            tk.Button(profile_window, text="Save Changes", font=("Arial", 12), command=save_changes).pack(pady=10)
+            tk.Button(user_frame, text="Save Changes", font=("Arial", 12), command=save_changes).pack(pady=10)
 
         elif isinstance(self.current_user, StaffMember):
-            tk.Label(profile_window, text="Username:", font=("Arial", 12)).pack(pady=5)
-            users_username_entry = tk.Entry(profile_window, font=("Arial", 12))
+            tk.Label(user_frame, text="Username:", font=("Arial", 12)).pack(pady=5)
+            users_username_entry = tk.Entry(user_frame, font=("Arial", 12))
             users_username_entry.pack(pady=5)
             users_username_entry.insert(0, "Type here...")
 
-            tk.Label(profile_window, text="Password:", font=("Arial", 12)).pack(pady=5)
-            users_password_entry = tk.Entry(profile_window, font=("Arial", 12), show="*")
+            tk.Label(user_frame, text="Password:", font=("Arial", 12)).pack(pady=5)
+            users_password_entry = tk.Entry(user_frame, font=("Arial", 12), show="*")
             users_password_entry.pack(pady=5)
             users_password_entry.insert(0, "Type here...")
 
-            tk.Label(profile_window, text="Favorite Genre:", font=("Arial", 12)).pack(pady=5)
-            users_favorite_genre = tk.Entry(profile_window, font=("Arial", 12))
+            tk.Label(user_frame, text="Favorite Genre:", font=("Arial", 12)).pack(pady=5)
+            users_favorite_genre = tk.Entry(user_frame, font=("Arial", 12))
             users_favorite_genre.pack(pady=5)
             users_favorite_genre.insert(0, "Type here...")
-            tk.Button(profile_window, text="Register User", font=("Arial", 12), command=register_user).pack(pady=10)
+            tk.Button(user_frame, text="Register User", font=("Arial", 12), command=register_user).pack(pady=10)
 
-            tk.Label(profile_window, text="User ID:", font=("Arial", 12)).pack(pady=5)
-            users_id_entry = tk.Entry(profile_window, font=("Arial", 12))
+            tk.Label(user_frame, text="User ID:", font=("Arial", 12)).pack(pady=5)
+            users_id_entry = tk.Entry(user_frame, font=("Arial", 12))
             users_id_entry.pack(pady=5)
             users_id_entry.insert(0, "Type here...")
-            tk.Button(profile_window, text="Remove User", font=("Arial", 12), command=remove_user).pack(pady=10)
+            tk.Button(user_frame, text="Remove User", font=("Arial", 12), command=remove_user).pack(pady=10)
 
-            tk.Label(profile_window, text="Book Name:", font=("Arial", 12)).pack(pady=5)
-            book_name = tk.Entry(profile_window, font=("Arial", 12))
+            tk.Label(book_frame, text="Book Name:", font=("Arial", 12)).pack(pady=5)
+            book_name = tk.Entry(book_frame, font=("Arial", 12))
             book_name.pack(pady=5)
             book_name.insert(0, "Type here...")
 
-            tk.Label(profile_window, text="Book Author:", font=("Arial", 12)).pack(pady=5)
-            book_author = tk.Entry(profile_window, font=("Arial", 12))
+            tk.Label(book_frame, text="Book Author:", font=("Arial", 12)).pack(pady=5)
+            book_author = tk.Entry(book_frame, font=("Arial", 12))
             book_author.pack(pady=5)
             book_author.insert(0, "Type here...")
 
-            tk.Label(profile_window, text="Book Genre:", font=("Arial", 12)).pack(pady=5)
-            book_genre = tk.Entry(profile_window, font=("Arial", 12))
+            tk.Label(book_frame, text="Book Description:", font=("Arial", 12)).pack(pady=5)
+            book_description = tk.Entry(book_frame, font=("Arial", 12))
+            book_description.pack(pady=5)
+            book_description.insert(0, "Type here...")
+
+            tk.Label(book_frame, text="Book Genre:", font=("Arial", 12)).pack(pady=5)
+            book_genre = tk.Entry(book_frame, font=("Arial", 12))
             book_genre.pack(pady=5)
             book_genre.insert(0, "Type here...")
+            
 
-            tk.Label(profile_window, text="Book Availability:", font=("Arial", 12)).pack(pady=5)
-            book_availability = tk.Entry(profile_window, font=("Arial", 12))
+            tk.Label(book_frame, text="Book Availability:", font=("Arial", 12)).pack(pady=5)
+            book_availability = tk.Entry(book_frame, font=("Arial", 12))
             book_availability.pack(pady=5)
             book_availability.insert(0, "Type here...")
             
 
-            tk.Label(profile_window, text="Book ISBN:", font=("Arial", 12)).pack(pady=5)
-            book_isbn = tk.Entry(profile_window, font=("Arial", 12))
+            tk.Label(book_frame, text="Book ISBN:", font=("Arial", 12)).pack(pady=5)
+            book_isbn = tk.Entry(book_frame, font=("Arial", 12))
             book_isbn.pack(pady=5)
             book_isbn.insert(0, "Type here...")
-            tk.Button(profile_window, text="Add Book", font=("Arial", 12), command=add_book).pack(pady=10)
-            tk.Button(profile_window, text="Remove Book", font=("Arial", 12), command=remove_book).pack(pady=10)
+            tk.Button(book_frame, text="Add Book", font=("Arial", 12), command=add_book).pack(pady=10)
+            tk.Button(book_frame, text="Remove Book", font=("Arial", 12), command=remove_book).pack(pady=10)
         tk.Button(profile_window, text="Cancel", font=("Arial", 12), command=cancel_changes).pack(pady=5)
 
     def show_book_details(self, item_values, book_isbn):
@@ -591,7 +613,7 @@ class LibraryApp:
         def reserve_book():
             print([book_isbn])
             result = self.current_user.reserve_book(book_isbn)  # Pass the ISBN
-            if result == "Reserved":
+            if result == "Book successfully reserved.":
                 messagebox.showinfo("Success", "The book has been successfully reserved.")
             elif result == "Added to Waitlist":
                 messagebox.showinfo("Waitlist", "The book is unavailable. You have been added to the waitlist.")
