@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from typing import List
 from database.db_controller import *
 import Book
@@ -29,6 +29,7 @@ class User:
         self._comments = comments  
         self.controller = DatabaseController()
 
+
     def reserve_book(self, book_isbn: str):
         """
         Reserve a book or add it to the waitlist if it's not available.
@@ -45,7 +46,6 @@ class User:
             """
 
             result = self.controller._cursor.execute(query, (book_isbn,)).fetchone()
-
             if not result:
                 return "Book not found."
 
@@ -55,8 +55,8 @@ class User:
             if availability == 1:  # If book is available
                 # Update book availability
                 update_query = "UPDATE Book SET Availability = 0 WHERE ISBN = ?;"
-                self.db_controller._cursor.execute(update_query, (book_isbn,))
-                self.db_controller._connection.commit()
+                self.controller._cursor.execute(update_query, (book_isbn,))
+                self.controller._conn.commit()  # Commit the change to the database
 
                 # Add reservation entry
                 reservation_query = """
@@ -65,8 +65,8 @@ class User:
                 """
                 reservation_date = date.today()
                 new_due_date = date.today() + timedelta(days=14)  # Example due date (2 weeks from now)
-                self.db_controller._cursor.execute(reservation_query, (self._user_id, book_isbn, reservation_date, new_due_date, "Active"))
-                self.db_controller._connection.commit()
+                self.controller._cursor.execute(reservation_query, (self._user_id, book_isbn, reservation_date, new_due_date, "Active"))
+                self.controller._conn.commit()  # Commit the reservation to the database
 
                 return "Book successfully reserved."
 
@@ -77,14 +77,21 @@ class User:
                 VALUES (?, ?, ?, ?, ?);
                 """
                 reservation_date = date.today()
-                self.db_controller._cursor.execute(waitlist_query, (self._user_id, book_isbn, reservation_date, due_date, "Waitlisted"))
-                self.db_controller._connection.commit()
+                self.controller._cursor.execute(waitlist_query, (self._user_id, book_isbn, reservation_date, due_date, "Waitlisted"))
+                self.controller._conn.commit()  # Commit the waitlist entry to the database
 
                 return "Book is not available. Added to the waitlist."
 
         except Exception as e:
             print(f"Error reserving book: {e}")
             return "An error occurred while reserving the book."
+
+
+        except Exception as e:
+            self.controller._conn.rollback()  # Ensure rollback on failure
+            print(f"Error reserving book: {e}")
+            return "An error occurred while reserving the book."
+
 
 
 
@@ -180,12 +187,14 @@ class User:
         self._comments = self.controller._cursor.execute(
             "SELECT CommentText FROM Comment WHERE UserID = ?", (self._user_id,)
         ).fetchall()
+        #self.controller._conn.commit()
         return self._comments
 
     def add_comment(self, book_isbn: str, comment: str):
         # Fetch the book object from the database using the ISBN  
         self._comments.append(comment)
         self.controller.add_comment(self._user_id,book_isbn, comment)
+        self.controller._conn.commit()
         return "Comment Added"
 
     
