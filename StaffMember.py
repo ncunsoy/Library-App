@@ -53,8 +53,8 @@ class StaffMember:
     def createBookReport(self, isbn):
         return self.db.createBookReport(isbn)
 
-    def createUserReport(self, isbn):
-        return self.db.createUserReport(isbn)
+    def createUserReport(self, user_id):
+        return self.db.createUserReport(user_id)
 
     def chargeForOverdueBook(self, user_id, charge_amount):
         return self.db.update_fine(user_id, charge_amount)

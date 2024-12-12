@@ -441,6 +441,22 @@ class LibraryApp:
                 report_users_id = users_id_entry.get()
                 self.controller.createUserReport(report_users_id)
                 tk.messagebox.showinfo("Success", "User report made successfully!")
+                tk.messagebox.showinfo("Success", StaffMember.createUserReport(report_users_id))
+                profile_window.destroy()
+
+        def charge_amount():
+            if isinstance(self.current_user, StaffMember):
+                user = username_fine.get()
+                amount = fine_amount.get()
+                self.controller.update_fine(user, amount)
+                tk.messagebox.showinfo("Success", "Fine charged successfully!")
+                profile_window.destroy()
+
+        def remove_fine():
+            if isinstance(self.current_user, StaffMember):
+                user = username_fine.get()
+                self.controller.update_fine(user, 0)
+                tk.messagebox.showinfo("Success", "Fine removed successfully!")
                 profile_window.destroy()
 
         def add_book():
@@ -556,6 +572,20 @@ class LibraryApp:
             tk.Button(book_frame, text="Remove Book", font=("Arial", 12), command=remove_book).pack(pady=10)
             tk.Button(book_frame, text="Make Book Report", font=("Arial", 12), command=book_report).pack(pady=5)
             tk.Button(user_frame, text="Make User Report", font=("Arial", 12), command=user_report).pack(pady=5)
+
+            tk.Label(user_frame, text=f"Handle Fines", font=("Arial", 12, "bold")).pack(pady=5)
+            tk.Label(user_frame, text="Username:", font=("Arial", 12)).pack(pady=5)
+            username_fine = tk.Entry(user_frame, font=("Arial", 12))
+            username_fine.pack(pady=5)
+            username_fine.insert(0, "Type here...")
+
+            tk.Label(user_frame, text="Fine Amount:", font=("Arial", 12)).pack(pady=5)
+            fine_amount = tk.Entry(user_frame, font=("Arial", 12))
+            fine_amount.pack(pady=5)
+            fine_amount.insert(0, "Type here...")
+            tk.Button(user_frame, text="Charge Amount", font=("Arial", 12), command=charge_amount).pack(pady=5)
+            tk.Button(user_frame, text="Remove Fine", font=("Arial", 12), command=remove_fine).pack(pady=5)
+
         tk.Button(profile_window, text="Cancel", font=("Arial", 12), command=cancel_changes).pack(pady=5)
 
     def show_book_details(self, item_values,book_isbn):
