@@ -436,6 +436,13 @@ class LibraryApp:
             tk.messagebox.showinfo("Success", "User removed successfully!")
             profile_window.destroy()
 
+        def user_report():
+            if isinstance(self.current_user, StaffMember):
+                report_users_id = users_id_entry.get()
+                self.controller.createUserReport(report_users_id)
+                tk.messagebox.showinfo("Success", "User report made successfully!")
+                profile_window.destroy()
+
         def add_book():
             if isinstance(self.current_user, StaffMember):
                 added_book_name = book_name.get()
@@ -454,7 +461,14 @@ class LibraryApp:
                 self.controller.remove_book(removed_book_isbn)
                 tk.messagebox.showinfo("Success", "Book removed successfully!")
                 profile_window.destroy()
-                
+
+        def book_report():
+            if isinstance(self.current_user, StaffMember):
+                report_book_isbn = book_isbn.get()
+                self.controller.createBookReport(report_book_isbn)
+                tk.messagebox.showinfo("Success", "Book report made successfully!")
+                profile_window.destroy()
+ 
             
         # Cancel button
         def cancel_changes():
@@ -540,6 +554,8 @@ class LibraryApp:
             book_isbn.insert(0, "Type here...")
             tk.Button(book_frame, text="Add Book", font=("Arial", 12), command=add_book).pack(pady=10)
             tk.Button(book_frame, text="Remove Book", font=("Arial", 12), command=remove_book).pack(pady=10)
+            tk.Button(book_frame, text="Make Book Report", font=("Arial", 12), command=book_report).pack(pady=5)
+            tk.Button(user_frame, text="Make User Report", font=("Arial", 12), command=user_report).pack(pady=5)
         tk.Button(profile_window, text="Cancel", font=("Arial", 12), command=cancel_changes).pack(pady=5)
 
     def show_book_details(self, item_values,book_isbn):
