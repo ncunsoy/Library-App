@@ -391,7 +391,7 @@ class LibraryApp:
         tk.Label(profile_window, text=f"Username: {self.current_user._name}", font=("Arial", 12)).pack(pady=5)
         tk.Label(profile_window, text=f"User ID: {self.current_user._user_id}", font=("Arial", 12)).pack(pady=5)
         tk.Label(profile_window, text=f"Favourite Genre: {self.current_user._favourite_genre}", font=("Arial", 12)).pack(pady=5)
-        tk.Label(profile_window, text=f"Fines: {self.current_user._fine}", font=("Arial", 12)).pack(pady=5)
+
 
     def show_book_details(self, item_values, book_isbn):
         """Show the selected book's details in a new window with separate frames for details and comments."""
@@ -437,23 +437,13 @@ class LibraryApp:
         comment_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         comment_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        # Load Comment 
-        def load_comments():
-            #comment_list.delete(0, tk.END)  # Önce listeyi temizle
-            comments = self.current_user.get_comments(self.item_values[0])
-            for comment in comments:
-                comment_list.insert(tk.END, comment)
-
         # Add Comment Button
         def add_comment():
-            
             comment = comment_entry.get().strip()
             if comment:
                 result = self.current_user.add_comment(item_values[0], comment)  # Pass the ISBN and comment
                 if result == "Comment Added":
-                    
                     comment_list.insert(tk.END, comment)
-                    comment_entry.delete(0, tk.END)
                     messagebox.showinfo("Comment Added", "Your comment has been added!")
                 else:
                     messagebox.showerror("Error", result)
@@ -470,8 +460,6 @@ class LibraryApp:
             fg="white"
         ).pack(anchor="w", pady=10)
 
-        load_comments()
-
         # Reserve Book Button
         def reserve_book():
             print([book_isbn])
@@ -486,9 +474,6 @@ class LibraryApp:
             # Refresh availability dynamically
             updated_availability = self.controller._cursor.execute(query, (book_isbn,)).fetchone()[0]
             availability_label.config(text=f"Availability: {'Available' if updated_availability == True else 'Reserved'}")
-
-
-
 
         tk.Button(
             details_frame,
