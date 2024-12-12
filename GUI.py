@@ -542,7 +542,7 @@ class LibraryApp:
             tk.Button(book_frame, text="Remove Book", font=("Arial", 12), command=remove_book).pack(pady=10)
         tk.Button(profile_window, text="Cancel", font=("Arial", 12), command=cancel_changes).pack(pady=5)
 
-    def show_book_details(self, item_values, book_isbn):
+    def show_book_details(self, item_values,book_isbn):
         """Show the selected book's details in a new window with separate frames for details and comments."""
         # Create a new window for book details
         details_window = tk.Toplevel(self.root)
@@ -586,6 +586,13 @@ class LibraryApp:
         comment_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         comment_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
+        # Load Comment 
+        def load_comments():
+            comment_list.delete(0, tk.END)  # Önce listeyi temizle
+            comments = self.current_user.get_comments()
+            for comment in comments:
+                comment_list.insert(tk.END, comment)
+
         # Add Comment Button
         def add_comment():
             comment = comment_entry.get().strip()
@@ -608,6 +615,8 @@ class LibraryApp:
             bg="blue",
             fg="white"
         ).pack(anchor="w", pady=10)
+
+        load_comments()
 
         # Reserve Book Button
         def reserve_book():
