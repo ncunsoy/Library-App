@@ -425,6 +425,21 @@ class LibraryApp:
                 self.controller.delete_user(deleted_users_id)
             tk.messagebox.showinfo("Success", "User removed successfully!")
             profile_window.destroy()
+
+        def add_book():
+            if isinstance(self.current_user, StaffMember):
+                added_book_name = book_name.get()
+                added_book_author = book_author.get()
+                added_book_genre = book_genre.get()
+                added_book_availability = book_availability.get()
+                added_book_isbn = book_isbn.get()
+                self.controller.add_book(added_book_isbn,added_book_name,added_book_author,added_book_genre,added_book_availability)
+
+        def remove_book():
+            if isinstance(self.current_user, StaffMember):
+                removed_book_isbn = book_isbn.get()
+                self.controller.remove_book(removed_book_isbn)
+                
             
         # Cancel button
         def cancel_changes():
@@ -475,9 +490,37 @@ class LibraryApp:
             users_id_entry.pack(pady=5)
             users_id_entry.insert(0, "Type here...")
             tk.Button(profile_window, text="Remove User", font=("Arial", 12), command=remove_user).pack(pady=10)
+
+            tk.Label(profile_window, text="Book Name:", font=("Arial", 12)).pack(pady=5)
+            book_name = tk.Entry(profile_window, font=("Arial", 12))
+            book_name.pack(pady=5)
+            book_name.insert(0, "Type here...")
+
+            tk.Label(profile_window, text="Book Author:", font=("Arial", 12)).pack(pady=5)
+            book_author = tk.Entry(profile_window, font=("Arial", 12))
+            book_author.pack(pady=5)
+            book_author.insert(0, "Type here...")
+
+            tk.Label(profile_window, text="Book Genre:", font=("Arial", 12)).pack(pady=5)
+            book_genre = tk.Entry(profile_window, font=("Arial", 12))
+            book_genre.pack(pady=5)
+            book_genre.insert(0, "Type here...")
+
+            tk.Label(profile_window, text="Book Availability:", font=("Arial", 12)).pack(pady=5)
+            book_availability = tk.Entry(profile_window, font=("Arial", 12))
+            book_availability.pack(pady=5)
+            book_availability.insert(0, "Type here...")
+            
+
+            tk.Label(profile_window, text="Book ISBN:", font=("Arial", 12)).pack(pady=5)
+            book_isbn = tk.Entry(profile_window, font=("Arial", 12))
+            book_isbn.pack(pady=5)
+            book_isbn.insert(0, "Type here...")
+            tk.Button(profile_window, text="Add Book", font=("Arial", 12), command=add_book).pack(pady=10)
+            tk.Button(profile_window, text="Remove Book", font=("Arial", 12), command=remove_book).pack(pady=10)
         tk.Button(profile_window, text="Cancel", font=("Arial", 12), command=cancel_changes).pack(pady=5)
 
-    def show_book_details(self, item_values):
+    def show_book_details(self, item_values, book_isbn):
         """Show the selected book's details in a new window with separate frames for details and comments."""
         # Create a new window for book details
         details_window = tk.Toplevel(self.root)
