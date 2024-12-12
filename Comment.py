@@ -6,7 +6,7 @@ class Comment:
     _commentDate=None
 
     def __init__(self,commentID,userID,bookISBN,commentText,commentDate):
-        self._commentID=commentID
+        self._commentID=commentID 
         self._userID=userID
         self._bookISBN=bookISBN
         self._commentText=commentText
