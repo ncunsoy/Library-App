@@ -109,7 +109,7 @@ class TestStaffMember(unittest.TestCase):
             
     def test_search_by_genre(self):
         self.db_mock.search_books.return_value = ["Book 1", "Book 2"]
-        result = self.staff.searchByGenre("Fiction")
+        result = self.staff.search_by_genre("Fiction")
         self.db_mock.search_books.assert_called_with(genre="Fiction")
         self.assertEqual(result, ["Book 1", "Book 2"])
 
