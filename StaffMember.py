@@ -13,13 +13,13 @@ class StaffMember:
         self.db = DatabaseController(db_name)
 
     #Staff Member methods
-    def searchByGenre(self, genre):
+    def search_by_genre(self, genre):
         return self.db.search_books(genre=genre)
 
-    def searchByAuthor(self, author):
+    def search_by_author(self, author):
         return self.db.search_books(author=author)
             
-    def searchByTitle(self, title):
+    def search_by_title(self, title):
         return self.db.search_books(title=title)
             
     def addBook(self, isbn, title, authors, description, genre, availability):
