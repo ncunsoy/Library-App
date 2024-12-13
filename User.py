@@ -201,5 +201,86 @@ class User:
     
     def getID(self) -> int:  
         return self._user_id 
+
+
+import unittest
+from unittest.mock import MagicMock
+from datetime import date
+from Book import Book
+
+class TestUser(unittest.TestCase):
+
+    def setUp(self):
+        # Kullanıcı ve sahte veritabanı bağlantısı oluştur
+        self.mock_controller = MagicMock()
+        self.user = User(
+            name="Test User",
+            user_id=1,
+            password="password123",
+            favourite_genre="Fantasy",
+            reading_list=[],
+            past_reserved_books=[],
+            current_notification=[],
+            fine=0.0,
+            comments=[]
+        )
+        self.user.controller = self.mock_controller  # Mock controller bağla
+
+    def test_reserve_book_available(self):
+        # Rezervasyon işlevini test et
+        self.mock_controller._cursor.execute.return_value.fetchone.return_value = (1, None)
+        result = self.user.reserve_book("1234567890")
+        self.assertEqual(result, "Book successfully reserved.")
+
+    def test_reserve_book_waitlist(self):
+        # Bekleme listesine ekleme işlevini test et
+        self.mock_controller._cursor.execute.return_value.fetchone.return_value = (0, date.today())
+        result = self.user.reserve_book("1234567890")
+        self.assertEqual(result, "Book is not available. Added to the waitlist.")
+
+    def test_view_due_date(self):
+        # Teslim tarihi görüntüleme işlevini test et
+        mock_book = MagicMock()
+        mock_book.getTitle.return_value = "Test Book"
+        self.mock_controller.view_dueDate.return_value = [("Test Book", date.today())]
+        due_date = self.user.view_due_date(mock_book)
+        self.assertEqual(due_date, date.today())
+
+    def test_view_recommendations(self):
+        # Öneriler işlevini test et
+        self.mock_controller.get_recommendations.return_value = [("1234567890", "Recommended Book")]
+        recommendations = self.user.view_recommendations()
+        self.assertIn("Recommended Book (ISBN: 1234567890)", recommendations)
+
+    def test_comment(self):
+        # Yorum ekleme işlevini test et
+        mock_book = MagicMock()
+        mock_book.getISBN.return_value = "1234567890"
+        self.user.comment(mock_book, "Great book!")
+        self.mock_controller.add_comment.assert_called_with(self.user.getID(), "1234567890", "Great book!")
+        self.assertIn("Great book!", self.user._comments)
+
+    def test_make_reading_list(self):
+        # Okuma listesi ekleme işlevini test et
+        self.user.make_reading_list("1234567890")
+        self.assertIn("1234567890", self.user._reading_list)
+        self.mock_controller.add_to_reading_list.assert_called_with(self.user.getID(), "1234567890")
+
+    def test_change_password(self):
+        # Şifre değiştirme işlevini test et
+        new_password = "new_password"
+        self.user.change_password(new_password)
+        self.mock_controller.change_password.assert_called_with("Users", self.user.getID(), new_password)
+        self.assertEqual(self.user._password, new_password)
+
+    def test_search_by_genre(self):
+        # Türle arama işlevini test et
+        self.mock_controller.search_books.return_value = ["Book1", "Book2"]
+        books = self.user.search_by_genre("Fantasy")
+        self.assertIn("Book1", books)
+        self.assertIn("Book2", books)
+
+if __name__ == "__main__":
+    unittest.main()
     
     
