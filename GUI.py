@@ -380,6 +380,7 @@ class LibraryApp:
         )
         self.notification_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
+    
 
     def open_profile_screen(self):
         """Kullanıcı profili için yeni bir ekran aç."""
@@ -400,13 +401,119 @@ class LibraryApp:
         book_frame = tk.Frame(profile_window)
         book_frame.pack(side=tk.RIGHT, padx=20, pady=10, fill=tk.BOTH, expand=True)
 
+        def open_readingList_window():      
+        
+            reading_window = tk.Toplevel(profile_window)
+            reading_window.title("Reading List")
+            reading_window.geometry("300x300")  # Yeni pencere boyutu
+            tk.Label(reading_window, text="My Reading Wish List", font=("Arial", 16, "bold")).pack(pady=10)
+            frame = tk.Frame(reading_window)
+            frame.pack(expand=True, fill=tk.BOTH)
+
+            
+        
+            text_widget = tk.Text(frame, wrap=tk.WORD, height=10, width=30)
+            text_widget.grid(row=0, column=0, padx=5, pady=5)
+            scrollbar = ttk.Scrollbar(frame, command=text_widget.yview)
+            scrollbar.grid(row=0, column=1, sticky="ns", padx=5, pady=5)  # Sağ tarafa hizalanır
+        
+            text_widget.config(yscrollcommand=scrollbar.set)
+
+            # Grid düzenlemesi için ortalama
+            frame.grid_rowconfigure(0, weight=1)
+            frame.grid_columnconfigure(0, weight=1)
+            
+            readingList = self.current_user._reading_list
+            #just_comment= [item[0] for item in comments]
+            #readingList = [''.join(readingList)]
+             # Yorumları Text widget'a ekle
+            for read in readingList:
+                text_widget.insert(tk.END, f"- {read}\n")
+        
+            # Scrollbar
+            scrollbar = ttk.Scrollbar(reading_window, command=text_widget.yview)
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            text_widget.config(yscrollcommand=scrollbar.set)
+
+        def open_recommend_window():      
+        
+            recommend_window = tk.Toplevel(profile_window)
+            recommend_window.title("Recommendations")
+            recommend_window.geometry("300x300")  # Yeni pencere boyutu
+            tk.Label(recommend_window, text="My Recommendations", font=("Arial", 16, "bold")).pack(pady=10)
+            frame = tk.Frame(recommend_window)
+            frame.pack(expand=True, fill=tk.BOTH)
+
+            
+        
+            text_widget = tk.Text(frame, wrap=tk.WORD, height=10, width=30)
+            text_widget.grid(row=0, column=0, padx=5, pady=5)
+            scrollbar = ttk.Scrollbar(frame, command=text_widget.yview)
+            scrollbar.grid(row=0, column=1, sticky="ns", padx=5, pady=5)  # Sağ tarafa hizalanır
+        
+            text_widget.config(yscrollcommand=scrollbar.set)
+
+            # Grid düzenlemesi için ortalama
+            frame.grid_rowconfigure(0, weight=1)
+            frame.grid_columnconfigure(0, weight=1)
+            
+            recommend = self.current_user.view_recommendations()
+            #just_comment= [item[0] for item in comments]
+
+             # Yorumları Text widget'a ekle
+            for reco in recommend:
+                text_widget.insert(tk.END, f"- {reco}\n")
+        
+            # Scrollbar
+            scrollbar = ttk.Scrollbar(recommend_window, command=text_widget.yview)
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            text_widget.config(yscrollcommand=scrollbar.set)
+
+        def open_commands_window():      
+        
+            commands_window = tk.Toplevel(profile_window)
+            commands_window.title("All Comments")
+            commands_window.geometry("300x300")  # Yeni pencere boyutu
+            tk.Label(commands_window, text="My All Commands", font=("Arial", 16, "bold")).pack(pady=10)
+            frame = tk.Frame(commands_window)
+            frame.pack(expand=True, fill=tk.BOTH)
+
+            
+        
+            text_widget = tk.Text(frame, wrap=tk.WORD, height=10, width=30)
+            text_widget.grid(row=0, column=0, padx=5, pady=5)
+            scrollbar = ttk.Scrollbar(frame, command=text_widget.yview)
+            scrollbar.grid(row=0, column=1, sticky="ns", padx=5, pady=5)  # Sağ tarafa hizalanır
+        
+            text_widget.config(yscrollcommand=scrollbar.set)
+
+            # Grid düzenlemesi için ortalama
+            frame.grid_rowconfigure(0, weight=1)
+            frame.grid_columnconfigure(0, weight=1)
+            
+            comments = self.current_user.get_comments()
+            just_comment= [item[0] for item in comments]
+
+             # Yorumları Text widget'a ekle
+            for comment in just_comment:
+                text_widget.insert(tk.END, f"- {comment}\n")
+        
+            # Scrollbar
+            scrollbar = ttk.Scrollbar(commands_window, command=text_widget.yview)
+            scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+            text_widget.config(yscrollcommand=scrollbar.set)
+
         # Save button
         def save_changes():
             if isinstance(self.current_user, User):
                 new_name = username_entry.get()
                 new_password = password_entry.get()
                 new_genre = genre_entry.get()
+                #readinglist = read_entry.get()
 
+                #if readinglist.strip():
+                #self.current_user._reading_list = readinglist
+                    
                 if new_name.strip():
                     self.current_user._name = new_name
                     self.controller.change_name(User, self.current_user.getID,new_name)
@@ -493,10 +600,11 @@ class LibraryApp:
 
 
         if isinstance(self.current_user, User):
-            tk.Label(user_frame, text="Manage Users", font=("Arial", 14, "bold")).pack(pady=5)
-            tk.Label(user_frame, text=f"User ID: {self.current_user._user_id}", font=("Arial", 12)).pack(pady=5)
-            tk.Label(user_frame, text=f"Favourite Genre: {self.current_user._favourite_genre}", font=("Arial", 12)).pack(pady=5)
-            tk.Label(user_frame, text="Change Username:", font=("Arial", 12)).pack(pady=5)
+
+            tk.Label(profile_window, text=f"User ID: {self.current_user._user_id}", font=("Arial", 12)).pack(pady=5)
+            tk.Label(profile_window, text=f"Fine: {self.current_user._fine}", font=("Arial", 12)).pack(pady=5)
+            tk.Label(profile_window, text=f"Favourite Genre: {self.current_user._favourite_genre}", font=("Arial", 12)).pack(pady=5)
+            tk.Label(profile_window, text="Change Username:", font=("Arial", 12)).pack(pady=5)
 
             # Add input field for changing username
             username_entry = tk.Entry(user_frame, font=("Arial", 12))
@@ -513,7 +621,16 @@ class LibraryApp:
             genre_entry.pack(pady=5)
             genre_entry.insert(0, self.current_user._favourite_genre)  # Pre-fill with current genre
 
-            tk.Button(user_frame, text="Save Changes", font=("Arial", 12), command=save_changes).pack(pady=10)
+            # Add input field for adding reading List
+            #tk.Label(profile_window, text="Add Reading List:", font=("Arial", 12)).pack(pady=5)
+            #read_entry = tk.Entry(profile_window, font=("Arial", 12))
+            #read_entry.pack(pady=5)
+            #read_entry.insert(0,self.current_user._reading_list)
+
+            tk.Button(profile_window, text="Save Changes", font=("Arial", 12), command=save_changes).pack(pady=10)
+            tk.Button(profile_window, text="See Comments", font=("Arial", 12), command=open_commands_window).pack(pady=10)
+            tk.Button(profile_window, text="See Recommendations", font=("Arial", 12), command=open_recommend_window).pack(pady=10)
+            tk.Button(profile_window, text="See Reading List", font=("Arial", 12), command=open_readingList_window).pack(pady=10)
 
         elif isinstance(self.current_user, StaffMember):
             tk.Label(user_frame, text="Username:", font=("Arial", 12)).pack(pady=5)
@@ -633,12 +750,8 @@ class LibraryApp:
         comment_scroll.pack(side=tk.RIGHT, fill=tk.Y)
         comment_list.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
 
-        # Load Comment 
-        def load_comments():
-            comment_list.delete(0, tk.END)  # Önce listeyi temizle
-            comments = self.current_user.get_comments()
-            for comment in comments:
-                comment_list.insert(tk.END, comment)
+        
+
 
         # Add Comment Button
         def add_comment():
@@ -646,6 +759,7 @@ class LibraryApp:
             if comment:
                 result = self.current_user.add_comment(item_values[0], comment)  # Pass the ISBN and comment
                 if result == "Comment Added":
+                    comment_entry.delete(0, tk.END)
                     comment_list.insert(tk.END, comment)
                     messagebox.showinfo("Comment Added", "Your comment has been added!")
                 else:
@@ -663,7 +777,7 @@ class LibraryApp:
             fg="white"
         ).pack(anchor="w", pady=10)
 
-        load_comments()
+        
 
         # Reserve Book Button
         def reserve_book():
@@ -688,7 +802,22 @@ class LibraryApp:
             bg="green",
             fg="white"
         ).pack(anchor="w", pady=10)
+        
 
+        def add_readingList():
+            print([book_isbn])
+            result= self.current_user.make_reading_list(book_isbn)  # Pass the ISBN
+            if result:
+                messagebox.showinfo("Success", "The book has been successfully added to reading list.")
+
+        tk.Button(
+            details_frame,
+            text="Add Reading List",
+            command= add_readingList,
+            font=("Arial", 12),
+            bg="green",
+            fg="white"
+        ).pack(anchor="w", pady=10)
 
     
 
