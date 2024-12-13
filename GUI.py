@@ -415,7 +415,7 @@ class LibraryApp:
             
             readingList = self.current_user._reading_list
             #just_comment= [item[0] for item in comments]
-            readingList = [''.join(readingList)]
+            #readingList = [''.join(readingList)]
              # Yorumları Text widget'a ekle
             for read in readingList:
                 text_widget.insert(tk.END, f"- {read}\n")
@@ -499,10 +499,10 @@ class LibraryApp:
                 new_name = username_entry.get()
                 new_password = password_entry.get()
                 new_genre = genre_entry.get()
-                readinglist = read_entry.get()
+                #readinglist = read_entry.get()
 
-                if readinglist.strip():
-                    self.current_user._reading_list = readinglist
+                #if readinglist.strip():
+                #self.current_user._reading_list = readinglist
                     
                 if new_name.strip():
                     self.current_user._name = new_name
@@ -560,11 +560,11 @@ class LibraryApp:
             genre_entry.pack(pady=5)
             genre_entry.insert(0, self.current_user._favourite_genre)  # Pre-fill with current genre
 
-             # Add input field for adding reading List
-            tk.Label(profile_window, text="Add Reading List:", font=("Arial", 12)).pack(pady=5)
-            read_entry = tk.Entry(profile_window, font=("Arial", 12))
-            read_entry.pack(pady=5)
-            read_entry.insert(0,self.current_user._reading_list)
+            # Add input field for adding reading List
+            #tk.Label(profile_window, text="Add Reading List:", font=("Arial", 12)).pack(pady=5)
+            #read_entry = tk.Entry(profile_window, font=("Arial", 12))
+            #read_entry.pack(pady=5)
+            #read_entry.insert(0,self.current_user._reading_list)
 
             tk.Button(profile_window, text="Save Changes", font=("Arial", 12), command=save_changes).pack(pady=10)
             tk.Button(profile_window, text="See Comments", font=("Arial", 12), command=open_commands_window).pack(pady=10)
@@ -691,7 +691,22 @@ class LibraryApp:
             bg="green",
             fg="white"
         ).pack(anchor="w", pady=10)
+        
 
+        def add_readingList():
+            print([book_isbn])
+            result= self.current_user.make_reading_list(book_isbn)  # Pass the ISBN
+            if result:
+                messagebox.showinfo("Success", "The book has been successfully added to reading list.")
+
+        tk.Button(
+            details_frame,
+            text="Add Reading List",
+            command= add_readingList,
+            font=("Arial", 12),
+            bg="green",
+            fg="white"
+        ).pack(anchor="w", pady=10)
 
     
 

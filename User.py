@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 from typing import List
 from database.db_controller import *
-import Book
+from Book import *
 
 class User:
 
@@ -97,7 +97,7 @@ class User:
 
 
     
-    def view_due_date(self,book) -> date:
+    def view_due_date(self,book:Book) -> date:
         print("Returning due date for the current book")
         # return date.today()
         # burda currentbook parametre olarak alınmalı ve onun duedatei dönülmeli
@@ -117,18 +117,18 @@ class User:
         return self.past_reserved_books
         
     def view_overdue(self) -> List[str]:
-        overdueList =[overDueBook for overDueBook in self._past_reserved_books if overDueBook.DueDate < date.today]
+        overdueList =[overDueBook for overDueBook in self._past_reserved_books if overDueBook._dueDate < date.today]
         return overdueList
      
     def view_fine(self) -> float:
-        return self.fine
+        return self._fine
 
-    def view_description(self, book) -> str:
-        return book.getDescription
+    def view_description(self, book :Book) -> str:
+        return book.getDescription()
 
-    def comment(self, book: str, comment: str):
+    def comment(self, book: Book, comment: str):
         self._comments.append(comment)
-        book.addComment(comment)
+        book.addComments(comment)
         self.controller.add_comment(self._user_id, book.getISBN(), comment)
 
     def view_recommendations(self) -> List[str]:
@@ -137,10 +137,11 @@ class User:
         recommendations = self.controller.get_recommendations(self._favourite_genre)
         return [f"{rec[1]} (ISBN: {rec[0]})" for rec in recommendations]
 
-    def make_reading_list(self, book: str):
-        print(f"Adding {book} to reading list")
-        self.reading_list.append(book)
-        self.controller.add_to_reading_list(self._user_id, book.getISBN())
+    def make_reading_list(self, book_isbn):
+        print(f"Adding {book_isbn} to reading list")
+        self._reading_list.append(book_isbn)
+        return self.controller.add_to_reading_list(self._user_id, book_isbn)
+        #return self._reading_list
 
     def change_password(self, new_password: str):
         print("Changing password")
@@ -159,10 +160,10 @@ class User:
         self.controller.set_favorite_genre(self._user_id, genre)
         self._favourite_genre = genre
 
-    def extend_reservation_duration(self,book,new_date: date):
+    def extend_reservation_duration(self,book_isbn,new_date: date):
         print(f"Extending reservation duration to {new_date}")
         # burda bir currentbook parametre olarak verilip onun duedate'i baştan set edilmesi gerekmiyor mu
-        self.controller.extend_due_date(self._user_id, book.getISBN(), new_date)
+        self.controller.extend_due_date(self._user_id, book_isbn, new_date)
 
     def search_by_genre(self, genre: str) -> List[str]:
         # print(f"Searching books by genre: {genre}")
@@ -199,6 +200,6 @@ class User:
 
     
     def getID(self) -> int:  
-        return self.user_id 
+        return self._user_id 
     
     
