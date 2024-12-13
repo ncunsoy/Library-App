@@ -88,9 +88,8 @@ class Book:
 import unittest
 from unittest.mock import MagicMock
 from datetime import datetime as dt
-from Book import Book
 from database.db_controller import DatabaseController
-from Comment import Comment  # Corrected import
+from Comment import Comment  
 
 class TestBook(unittest.TestCase):
 
