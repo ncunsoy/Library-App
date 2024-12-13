@@ -428,7 +428,9 @@ class LibraryApp:
             #readingList = [''.join(readingList)]
              # Yorumları Text widget'a ekle
             for read in readingList:
-                text_widget.insert(tk.END, f"- {read}\n")
+                query="SELECT Title FROM Book WHERE ISBN = ?"
+                title=self.controller._cursor.execute(query, (read,)).fetchone()
+                text_widget.insert(tk.END, f"- {title}\n")
         
             # Scrollbar
             scrollbar = ttk.Scrollbar(reading_window, command=text_widget.yview)
